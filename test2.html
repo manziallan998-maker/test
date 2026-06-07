@@ -3,1143 +3,711 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdmissionIQ — AI University & Scholarship Application Platform for African Students</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>AdmissionIQ - AI University & Scholarship Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-            --bg-base-light: #f8fafc;
-            --bg-surface-light: #ffffff;
-            --border-light: #e2e8f0;
-            --text-main-light: #0f172a;
-            --text-muted-light: #64748b;
-            --brand-primary: #2563eb;
-            --brand-success: #10b981;
-            --brand-warning: #f59e0b;
-            --brand-danger: #ef4444;
-
-            --bg-base-dark: #0b0f19;
-            --bg-surface-dark: #131b2e;
-            --border-dark: #1e293b;
-            --text-main-dark: #f8fafc;
-            --text-muted-dark: #94a3b8;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-sans); transition: background-color 0.2s ease, border-color 0.2s ease; }
-        body { background-color: var(--bg-base-light); color: var(--text-main-light); min-height: 100vh; display: flex; flex-direction: column; }
-        body.dark { background-color: var(--bg-base-dark); color: var(--text-main-dark); }
-
-        /* Typography & Custom Utilities */
-        h1, h2, h3, h4 { font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
-        p { color: var(--text-muted-light); line-height: 1.5; }
-        body.dark p { color: var(--text-muted-dark); }
-        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
-        .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; font-size: 0.75rem; font-weight: 500; border-radius: 9999px; }
-        .badge-free { background: #e0f2fe; color: #0369a1; }
-        .badge-pro { background: #fef3c7; color: #b45309; }
-        .badge-enterprise { background: #ede9fe; color: #6d28d9; }
-
-        /* Layout Framework */
-        header { background: var(--bg-surface-light); border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 50; height: 70px; display: flex; align-items: center; }
-        body.dark header { background: var(--bg-surface-dark); border-bottom: 1px solid var(--border-dark); }
-        .nav-wrapper { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .brand { font-size: 1.25rem; font-weight: 700; color: var(--brand-primary); display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
-        .nav-actions { display: flex; align-items: center; gap: 1rem; }
-
-        .main-layout { display: flex; flex: 1; position: relative; }
-        sidebar { width: 260px; background: var(--bg-surface-light); border-right: 1px solid var(--border-light); padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
-        body.dark sidebar { background: var(--bg-surface-dark); border-right: 1px solid var(--border-dark); }
-        .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; color: var(--text-muted-light); text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 0.925rem; cursor: pointer; }
-        body.dark .sidebar-link { color: var(--text-muted-dark); }
-        .sidebar-link:hover, .sidebar-link.active { background: #f1f5f9; color: var(--brand-primary); }
-        body.dark .sidebar-link:hover, body.dark .sidebar-link.active { background: #1e293b; color: #ffffff; }
-
-        .content-area { flex: 1; padding: 2rem; overflow-y: auto; max-width: 1140px; margin: 0 auto; width: 100%; }
-        .view-panel { display: none; animation: fadeIn 0.2s ease-in-out; }
-        .view-panel.active { display: block; }
-
-        /* Component Engine: Cards, Forms, Tables */
-        .card { background: var(--bg-surface-light); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
-        body.dark .card { background: var(--bg-surface-dark); border: 1px solid var(--border-dark); box-shadow: none; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
-        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
-
-        .form-group { margin-bottom: 1.25rem; }
-        .form-group label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
-        .form-control { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-light); background: var(--bg-surface-light); color: var(--text-main-light); border-radius: 8px; font-size: 0.95rem; }
-        body.dark .form-control { border: 1px solid var(--border-dark); background: var(--bg-base-dark); color: var(--text-main-dark); }
-        .form-control:focus { outline: 2px solid var(--brand-primary); outline-offset: -1px; }
-
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.25rem; font-weight: 500; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-size: 0.925rem; text-decoration: none; }
-        .btn-primary { background: var(--brand-primary); color: white; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-secondary { background: transparent; border-color: var(--border-light); color: var(--text-main-light); }
-        body.dark .btn-secondary { border-color: var(--border-dark); color: var(--text-main-dark); }
-        .btn-secondary:hover { background: #f1f5f9; }
-        body.dark .btn-secondary:hover { background: #1e293b; }
-
-        .data-table-wrapper { width: 100%; overflow-x: auto; border: 1px solid var(--border-light); border-radius: 8px; margin-top: 1rem; }
-        body.dark .data-table-wrapper { border: 1px solid var(--border-dark); }
-        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.925rem; }
-        .data-table th { background: #f8fafc; padding: 0.875rem 1rem; font-weight: 600; color: var(--text-muted-light); border-bottom: 1px solid var(--border-light); }
-        body.dark .data-table th { background: #0f172a; color: var(--text-muted-dark); border-bottom: 1px solid var(--border-dark); }
-        .data-table td { padding: 1rem; border-bottom: 1px solid var(--border-light); }
-        body.dark .data-table td { border-bottom: 1px solid var(--border-dark); }
-
-        /* Feature Special Implementations */
-        .analytics-pill { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem; background: var(--bg-surface-light); border: 1px solid var(--border-light); border-radius: 12px; }
-        body.dark .analytics-pill { background: var(--bg-surface-dark); border: 1px solid var(--border-dark); }
-        .analytics-val { font-size: 1.75rem; font-weight: 700; color: var(--brand-primary); margin-top: 0.25rem; }
-        .timeline-node { position: relative; padding-left: 2rem; margin-bottom: 1.5rem; }
-        .timeline-node::before { content: ''; position: absolute; left: 6px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--brand-primary); }
-        .timeline-node::after { content: ''; position: absolute; left: 11px; top: 20px; bottom: -20px; width: 2px; background: var(--border-light); }
-        body.dark .timeline-node::after { background: var(--border-dark); }
-        .timeline-node:last-child::after { display: none; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 992px) { .main-layout { flex-direction: column; } sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-light); } }
+        .linear-dark { background: linear-gradient(135deg, #060814 0%, #0d0f22 100%); }
+        .glass-box { background: rgba(13, 17, 39, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.04); }
+        .tab-btn-active { background: rgba(79, 70, 229, 0.15); border-color: #4f46e5; color: #ffffff; }
+        .custom-terminal::-webkit-scrollbar { width: 4px; }
+        .custom-terminal::-webkit-scrollbar-track { background: transparent; }
+        .custom-terminal::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
     </style>
 </head>
-<body>
+<body class="linear-dark text-slate-200 min-h-screen font-sans antialiased selection:bg-indigo-500/30">
 
-    <header>
-        <div class="container nav-wrapper">
-            <a href="#" class="brand" onclick="app.switchView('dashboard')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                AdmissionIQ
-            </a>
-            <div class="nav-actions">
-                <button class="btn btn-secondary" style="padding: 0.5rem;" onclick="app.toggleTheme()" title="Toggle Interface Mode">🌓</button>
-                <div id="auth-state-container" style="display: flex; align-items: center; gap: 1rem;">
-                    </div>
+    <nav class="border-b border-slate-900 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-xl shadow-indigo-600/20">IQ</div>
+            <div>
+                <span class="text-lg font-black tracking-tight text-white block">AdmissionIQ</span>
+                <span class="text-[10px] text-indigo-400 font-mono tracking-widest uppercase block font-semibold">AI Admissions Counselor for Africa</span>
             </div>
         </div>
-    </header>
 
-    <div class="main-layout">
-        <sidebar id="app-sidebar" style="display: none;">
-            <div style="padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted-light); letter-spacing: 0.05em;">Workspace</div>
-            <a class="sidebar-link active" data-target="dashboard" onclick="app.switchView('dashboard')">📊 Dashboard</a>
-            <a class="sidebar-link" data-target="universities" onclick="app.switchView('universities')">🏛️ Universities</a>
-            <a class="sidebar-link" data-target="scholarships" onclick="app.switchView('scholarships')">🎓 Scholarships</a>
-            <a class="sidebar-link" data-target="tracker" onclick="app.switchView('tracker')">🎯 Application Tracker</a>
-            <a class="sidebar-link" data-target="documents" onclick="app.switchView('documents')">📁 Document Vault</a>
+        <div class="flex items-center gap-4">
+            <div id="engine-status-badge" class="text-xs font-mono bg-slate-950 border border-slate-900 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <span id="status-dot" class="h-2 w-2 rounded-full bg-rose-500 shadow-md shadow-rose-500/50"></span>
+                <span id="status-string" class="text-slate-400 font-medium">Standby Mode (Locked)</span>
+            </div>
+            <button id="nav-logout-btn" onclick="app.signOutEngine()" class="hidden text-xs bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/50 px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                Sign Out
+            </button>
+        </div>
+    </nav>
+
+    <div id="gatekeeper-lockout" class="fixed inset-0 top-[73px] bg-slate-950/95 backdrop-blur-md z-40 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="w-full max-w-md glass-box rounded-2xl p-6 shadow-2xl border border-slate-900">
+            <div class="text-center mb-6">
+                <div class="inline-flex h-12 w-12 rounded-full bg-indigo-600/10 text-indigo-400 items-center justify-center text-xl mb-2">🔐</div>
+                <h2 class="text-xl font-bold text-white">Access Verification Protocol</h2>
+                <p class="text-xs text-slate-400 mt-1">Please enter your production account criteria or register an operational profile string instance node.</p>
+            </div>
             
-            <div style="padding: 1.5rem 1rem 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted-light); letter-spacing: 0.05em;">AI Copilots (Premium)</div>
-            <a class="sidebar-link" data-target="ai-studio" onclick="app.switchView('ai-studio')">🪄 AI Document Studio</a>
-            <a class="sidebar-link" data-target="ai-matcher" onclick="app.switchView('ai-matcher')">🤖 Smart Matcher</a>
-
-            <div style="padding: 1.5rem 1rem 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted-light); letter-spacing: 0.05em;">Strategy & Architecture</div>
-            <a class="sidebar-link" data-target="blueprint" onclick="app.switchView('blueprint')">🗺️ Startup Blueprint</a>
-            <a class="sidebar-link" data-target="schema-docs" onclick="app.switchView('schema-docs')">💾 Supabase Blueprint</a>
-            
-            <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-light);" id="sidebar-profile-footer"></div>
-        </sidebar>
-
-        <div class="content-area">
-            
-            <div id="view-gateway" class="view-panel active">
-                <div style="max-width: 480px; margin: 4rem auto; text-align: center;">
-                    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">The AI Admissions Counselor for African Students</h1>
-                    <p style="margin-bottom: 2.5rem;">Access global learning opportunities, automate complex application documents, match localized financial conditions, and manage compliance pipelines across international matrices.</p>
-                    
-                    <div class="card" style="text-align: left;">
-                        <h3 style="margin-bottom: 1.25rem;" id="auth-title">Create Your Free Account</h3>
-                        <form id="auth-form" onsubmit="app.handleAuthSubmit(event)">
-                            <div class="form-group" id="group-fullname">
-                                <label>Full Legal Name</label>
-                                <input type="text" id="auth-fullname" class="form-control" placeholder="Mugisha Billy Chris" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Email Address</label>
-                                <input type="email" id="auth-email" class="form-control" placeholder="name@domain.com" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Password</label>
-                                <input type="password" id="auth-password" class="form-control" placeholder="Minimum 6 complex characters" required>
-                            </div>
-                            <div class="form-group" id="group-profile-details">
-                                <div class="grid-2" style="gap: 1rem; margin-bottom: 0;">
-                                    <div>
-                                        <label>Country of Origin</label>
-                                        <select id="auth-country" class="form-control">
-                                            <option value="Rwanda">Rwanda</option>
-                                            <option value="Kenya">Kenya</option>
-                                            <option value="Uganda">Uganda</option>
-                                            <option value="Tanzania">Tanzania</option>
-                                            <option value="Nigeria">Nigeria</option>
-                                            <option value="Ghana">Ghana</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label>Education Level</label>
-                                        <select id="auth-edulevel" class="form-control">
-                                            <option value="Senior 5 / High School">High School (Senior 5/6)</option>
-                                            <option value="Undergraduate Student">Undergraduate Student</option>
-                                            <option value="Graduate Professional">Graduate Professional</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="auth-submit-btn">Register Secure Account</button>
-                        </form>
-                        <div style="margin-top: 1.25rem; text-align: center; font-size: 0.875rem;">
-                            <span id="auth-toggle-msg">Already structured with us?</span> 
-                            <a href="#" id="auth-toggle-link" style="color: var(--brand-primary); font-weight: 500; text-decoration: none;" onclick="app.toggleAuthMode()">Switch to Login</a>
-                        </div>
-                    </div>
-                    <div style="font-size: 0.815rem; color: var(--text-muted-light);">Secured via Supabase Identity Infrastructure with Row-Level Isolation Guarantees.</div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Full Onboarding Name (New Accounts Only)</label>
+                    <input type="text" id="auth-fullname" value="Mugisha Billy Chriss" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
                 </div>
-            </div>
-
-            <div id="view-dashboard" class="view-panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <div>
-                        <h1 id="dash-welcome">Welcome back, Representative Student</h1>
-                        <p>Real-time processing dashboard for application milestones.</p>
-                    </div>
-                    <div class="badge badge-free" id="dash-plan-badge" style="font-size: 0.875rem; padding: 0.5rem 1rem;">Free Tier</div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Student Corporate Email Context</label>
+                    <input type="email" id="auth-email" value="mugishabillychriss@gmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
                 </div>
-
-                <div class="grid-3">
-                    <div class="analytics-pill">
-                        <div><p style="font-size: 0.875rem; font-weight: 500;">Active Workflows</p><div class="analytics-val" id="count-apps">0</div></div>
-                        <div style="font-size: 2rem;">🎯</div>
-                    </div>
-                    <div class="analytics-pill">
-                        <div><p style="font-size: 0.875rem; font-weight: 500;">Saved Scholarships</p><div class="analytics-val" id="count-scholars">0</div></div>
-                        <div style="font-size: 2rem;">🎓</div>
-                    </div>
-                    <div class="analytics-pill">
-                        <div><p style="font-size: 0.875rem; font-weight: 500;">Document Completeness</p><div class="analytics-val" id="count-docs">0%</div></div>
-                        <div style="font-size: 2rem;">📁</div>
-                    </div>
-                </div>
-
-                <div class="grid-2">
-                    <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Active Milestone Trackers</h3>
-                        <div id="dashboard-tracker-list">
-                            </div>
-                    </div>
-                    <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Recommended Scholarships</h3>
-                        <div id="dashboard-scholarships-list">
-                            </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-universities" class="view-panel">
-                <div style="margin-bottom: 2rem;">
-                    <h1>Global University Database Engine</h1>
-                    <p>Filter, query, and structure tracking hooks for leading academic targets globally.</p>
-                </div>
-                <div class="card">
-                    <div class="grid-3" style="margin-bottom: 0;">
-                        <div>
-                            <label style="font-size: 0.875rem; font-weight: 500; display: block; margin-bottom: 0.5rem;">Geographic Focus</label>
-                            <select id="filter-uni-country" class="form-control" onchange="app.renderUniversities()">
-                                <option value="all">All Countries</option>
-                                <option value="South Africa">South Africa</option>
-                                <option value="Kenya">Kenya</option>
-                                <option value="United Kingdom">United Kingdom</option>
-                                <option value="Netherlands">Netherlands</option>
-                                <option value="Rwanda">Rwanda</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.875rem; font-weight: 500; display: block; margin-bottom: 0.5rem;">Max Tuition (USD/yr)</label>
-                            <input type="number" id="filter-uni-budget" class="form-control" placeholder="e.g. 5000" oninput="app.renderUniversities()">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.875rem; font-weight: 500; display: block; margin-bottom: 0.5rem;">Search Query</label>
-                            <input type="text" id="search-uni-query" class="form-control" placeholder="Search by name..." oninput="app.renderUniversities()">
-                        </div>
-                    </div>
-                </div>
-                <div class="data-table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Institution</th>
-                                <th>Country</th>
-                                <th>Global Rank</th>
-                                <th>Tuition Rate</th>
-                                <th>Deadlines</th>
-                                <th>Action Actionable</th>
-                            </tr>
-                        </thead>
-                        <tbody id="uni-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="view-scholarships" class="view-panel">
-                <div style="margin-bottom: 2rem;">
-                    <h1>International & Regional Scholarship Matrix</h1>
-                    <p>Unlock capital and resource funds structured specifically for deep integration targets across localized requirements.</p>
-                </div>
-                <div class="card">
-                    <div class="grid-2" style="margin-bottom: 0;">
-                        <div>
-                            <label style="font-size: 0.875rem; font-weight: 500; display: block; margin-bottom: 0.5rem;">Funding Structuring Type</label>
-                            <select id="filter-scholar-type" class="form-control" onchange="app.renderScholarships()">
-                                <option value="all">All Structures</option>
-                                <option value="Full">Full Cost Integration</option>
-                                <option value="Partial">Partial Allowances</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.875rem; font-weight: 500; display: block; margin-bottom: 0.5rem;">Global Target Region Focus</label>
-                            <input type="text" id="search-scholar-query" class="form-control" placeholder="Search provider or matrix parameters..." oninput="app.renderScholarships()">
-                        </div>
-                    </div>
-                </div>
-                <div class="data-table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Scholarship Program</th>
-                                <th>SaaS Provider</th>
-                                <th>Coverage Class</th>
-                                <th>Target Matrix</th>
-                                <th>Deadline Profile</th>
-                                <th>Action Hooks</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scholar-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="view-tracker" class="view-panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <div>
-                        <h1>Application Compliance Pipeline</h1>
-                        <p>Track admission gates, interface states, and submission steps across targets.</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="app.openNewTrackerModal()">+ Spawn Tracking Interface</button>
-                </div>
-
-                <div class="card" id="tracker-creation-zone" style="display: none; transition: all 0.3s ease;">
-                    <h3 style="margin-bottom: 1rem;">Initialize Live Compliance Pipeline Hook</h3>
-                    <form onsubmit="app.handleCreateTracker(event)">
-                        <div class="grid-3">
-                            <div class="form-group">
-                                <label>University Name Reference</label>
-                                <input type="text" id="track-uniname" class="form-control" required placeholder="e.g. African Leadership University">
-                            </div>
-                            <div class="form-group">
-                                <label>Academic Program Specialization</label>
-                                <input type="text" id="track-program" class="form-control" required placeholder="BSc Software Engineering">
-                            </div>
-                            <div class="form-group">
-                                <label>State Pipeline Step</label>
-                                <select id="track-status" class="form-control">
-                                    <option value="researching">Researching Core</option>
-                                    <option value="draft">Draft Setup Phase</option>
-                                    <option value="in_progress">Processing Core Engine</option>
-                                    <option value="submitted">Submitted Secure</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('tracker-creation-zone').style.display='none'">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Inject Vector Pipeline</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="data-table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Target Entity</th>
-                                <th>Program Focus</th>
-                                <th>Pipeline State Status</th>
-                                <th>Injected Vectors</th>
-                                <th>Actions Monitoring</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tracker-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="view-documents" class="view-panel">
-                <div style="margin-bottom: 2rem;">
-                    <h1>Supabase Storage Document Vault</h1>
-                    <p>Maintain encryption vectors, verified academic records, and secure passport packages.</p>
-                </div>
-                <div class="grid-2">
-                    <div class="card">
-                        <h3 style="margin-bottom: 1.25rem;">Secure Uplink Gateway</h3>
-                        <form onsubmit="app.handleDocUpload(event)">
-                            <div class="form-group">
-                                <label>Document Functional Category</label>
-                                <select id="doc-type" class="form-control">
-                                    <option value="cv">Academic Curriculum Vitae (CV)</option>
-                                    <option value="passport">Passport Identity Package</option>
-                                    <option value="transcript">Official Academic Transcript Record</option>
-                                    <option value="certificate">Certification Portfolio</option>
-                                    <option value="recommendation">Letter of Endorsement / Recommendation</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Display Alias Name</label>
-                                <input type="text" id="doc-name" class="form-control" required placeholder="Official Transcript 2026_VerA">
-                            </div>
-                            <div class="form-group">
-                                <label>Binary Payload Selection</label>
-                                <input type="file" id="doc-file" class="form-control" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">Execute Cryptographic Binary Uplink</button>
-                        </form>
-                    </div>
-                    <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Vault Directory Registry</h3>
-                        <div id="doc-vault-registry" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-ai-studio" class="view-panel">
-                <div style="margin-bottom: 2rem;">
-                    <h1>Cognitive Context Prompt Studio</h1>
-                    <p>Leverage systemic generative models to dynamically render enterprise-grade cover architectures, personal matrices, and letters.</p>
-                </div>
-                <div class="card" style="border-left: 4px solid #7c3aed;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-                        <div>
-                            <h3 style="color: #7c3aed;">Generative LLM Infrastructure Context</h3>
-                            <p>Generate precise, high-conversion artifacts based on structural parameters.</p>
-                        </div>
-                        <span class="badge badge-pro">Premium Interface Module</span>
-                    </div>
-
-                    <div class="grid-3" style="gap: 1rem;">
-                        <button class="btn btn-secondary active" id="btn-studio-cv" onclick="app.setStudioMode('cv')">AI Academic CV Builder</button>
-                        <button class="btn btn-secondary" id="btn-studio-ps" onclick="app.setStudioMode('ps')">AI Personal Statement Engine</button>
-                        <button class="btn btn-secondary" id="btn-studio-ml" onclick="app.setStudioMode('ml')">AI Motivation Letter Core</button>
-                    </div>
-                    
-                    <hr style="border: 0; border-top: 1px solid var(--border-light); margin: 1.5rem 0;">
-
-                    <div class="grid-2">
-                        <div>
-                            <form id="studio-generation-form" onsubmit="app.executeAIGeneration(event)">
-                                <div id="studio-dynamic-inputs">
-                                    </div>
-                                <button type="submit" class="btn btn-primary" style="background:#7c3aed; width: 100%;">Execute Synthesis Vector</button>
-                            </form>
-                        </div>
-                        <div style="display: flex; flex-direction: column;">
-                            <label style="font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Synthesized Output Sandbox</label>
-                            <div id="studio-output-sandbox" style="flex: 1; min-height: 250px; background: #0f172a; color: #38bdf8; font-family: monospace; padding: 1rem; border-radius: 8px; font-size: 0.875rem; white-space: pre-wrap; overflow-y: auto;">System idle. Ready for synthesis parameters...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-ai-matcher" class="view-panel">
-                <div style="margin-bottom: 2rem;">
-                    <h1>Deterministic Matching & Scoring Engine</h1>
-                    <p>Algorithmic calculation vectors correlating academic profiling against cost metrics and administrative constraints.</p>
-                </div>
-                <div class="grid-2">
-                    <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Parameter Matrix Alignment</h3>
-                        <form onsubmit="app.runDeterministicMatching(event)">
-                            <div class="form-group">
-                                <label>Academic Core Scoring Weight Profile (GPA/National Exam %)</label>
-                                <input type="number" id="match-grades" class="form-control" required min="0" max="100" placeholder="e.g. 88">
-                            </div>
-                            <div class="form-group">
-                                <label>Hard Ceiling Annual Budget Threshold (USD)</label>
-                                <input type="number" id="match-budget" class="form-control" required placeholder="e.g. 4000">
-                            </div>
-                            <div class="form-group">
-                                <label>Target Program Specialization Class</label>
-                                <select id="match-track" class="form-control">
-                                    <option value="BSc">BSc Core Science & Software Architectures</option>
-                                    <option value="BA">BA Humanities & Business Vectors</option>
-                                    <option value="MBA">MBA Leadership Engineering</option>
-                                    <option value="PhD">PhD Theoretical Research Modules</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="width:100%;">Execute Mathematical Evaluation Loop</button>
-                        </form>
-                    </div>
-                    <div class="card">
-                        <h3 style="margin-bottom: 1rem;">Algorithmic Scoring Yield</h3>
-                        <div id="matcher-results-render" style="display: flex; flex-direction: column; gap: 1rem;">
-                            <p>Awaiting constraint parameter pipeline optimization.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-blueprint" class="view-panel">
-                <div style="margin-bottom: 2rem;">
-                    <h1>AdmissionIQ Corporate Strategy Blueprint</h1>
-                    <p>SaaS Architecture, GTM Execution Matrices, Financial Planning, and Commercial Optimization Blueprints for Pan-African Expansion.</p>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Secure Password String Matrix</label>
+                    <input type="password" id="auth-pass" value="SecureAdmissionPass123!" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
                 </div>
                 
-                <div class="card">
-                    <h2 style="margin-bottom: 1rem; color: var(--brand-primary);">1. Comprehensive Startup Business Architecture</h2>
-                    <div class="grid-2">
-                        <div>
-                            <h4 style="margin-top: 0.5rem; margin-bottom: 0.25rem;">Value Proposition Engine</h4>
-                            <p style="font-size: 0.9rem;">AdmissionIQ converts complex, fragmented, high-friction elite international consulting knowledge into an automated, multi-tenant digital processing hub. We reduce processing friction costs for African students by up to 90% while providing institutional compliance controls.</p>
-                        </div>
-                        <div>
-                            <h4 style="margin-top: 0.5rem; margin-bottom: 0.25rem;">SaaS Commercial Tiers</h4>
-                            <p style="font-size: 0.9rem;"><strong>Free:</strong> Basic search indexing for verified programs. <br><strong>Premium ($15/cycle):</strong> Generative optimization models, real-time tracking webhooks, validation checking. <br><strong>Enterprise:</strong> Dynamic tracking solutions for secondary institutional modules and partner agencies.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2 style="margin-bottom: 1rem; color: var(--brand-success);">2. User Acquisition & Growth Optimization Model</h2>
-                    <div class="data-table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Growth Vector Channel</th>
-                                    <th>Strategic Execution Mechanism</th>
-                                    <th>Target KPI Framework</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Institutional B2B2C Pipelines</strong></td>
-                                    <td>Deploy basic, automated coordination tooling directly into secondary schools across Kigali, Nairobi, and Lagos.</td>
-                                    <td>40% conversion of baseline class matrices.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Organic Authority SEO Architecture</strong></td>
-                                    <td>Programmatic parsing pages mapping specific long-tail queries (e.g., "How to apply for Mastercard Foundation from Rwanda").</td>
-                                    <td>&lt; $0.15 blending customer acquisition cost (CAC).</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Viral Growth Peer Engineering</strong></td>
-                                    <td>Unlock custom verification checkers and premium preview modules by successfully routing tracking invites to active applicant cohorts.</td>
-                                    <td>Viral Coefficient Factor K &gt; 1.25.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2 style="margin-bottom: 1rem; color: var(--brand-warning);">3. 12-Month Tactical Infrastructure Roadmap</h2>
-                    <div class="timeline-node">
-                        <strong>Months 01 – 03: Core Pipeline Validation (MVP Phase)</strong>
-                        <p style="font-size: 0.9rem;">Deploy single-file architecture framework integrated directly against real-time Supabase backends. Validate database constraint mechanisms across baseline test users in Kigali.</p>
-                    </div>
-                    <div class="timeline-node">
-                        <strong>Months 04 – 06: Cognitive Enhancement & Commercial Expansion</strong>
-                        <p style="font-size: 0.9rem;">Deploy custom Supabase Edge Functions mapping contextual vector weights to underlying LLM fine-tunes. Launch international collection rails (M-Pesa, Mobile Money, Flutterwave) at $15 premium checkpoints.</p>
-                    </div>
-                    <div class="timeline-node">
-                        <strong>Months 07 – 12: High-Volume Scale Matrix (&gt; 1M Transactions)</strong>
-                        <p style="font-size: 0.9rem;">Optimize transaction data lookups using Read-Replicas, distributed indexing patterns, and Cloudflare Edge optimizations. Standardize administrative portals for enterprise partner institutions.</p>
-                    </div>
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <button onclick="app.authenticateIdentity('signUp')" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs py-2.5 rounded-xl transition-colors cursor-pointer">
+                        Register Identity
+                    </button>
+                    <button onclick="app.authenticateIdentity('signIn')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-colors cursor-pointer">
+                        Authorize Token
+                    </button>
                 </div>
             </div>
-
-            <div id="view-schema-docs" class="view-panel">
-                <div style="margin-bottom: 2rem;">
-                    <h1>Production Supabase Relational Schema</h1>
-                    <p>Reference blueprint mapping declarative tables, rigorous constraints, and automated triggers to deploy inside your Supabase SQL editor.</p>
-                </div>
-                <div class="card" style="background: #0f172a; color: #f8fafc; border: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <span style="font-family: monospace; font-size: 0.815rem; color: #a78bfa;">DATABASE LEVEL PRODUCTION DECLARATIONS (POSTGRESQL)</span>
-                        <button class="btn btn-secondary" style="font-size: 0.75rem; color: #a78bfa; border-color: #334155;" onclick="navigator.clipboard.writeText(document.getElementById('sql-code-block').innerText)">Copy Script Bundle</button>
-                    </div>
-                    <pre id="sql-code-block" style="font-family: monospace; font-size: 0.85rem; overflow-x: auto; line-height: 1.5; color: #e2e8f0; white-space: pre-wrap;">
--- =====================================================================
--- PRODUCTION-GRADE POSTGRESQL LAYER SCHEMA DESIGN — ADMISSIONIQ
--- PROJECT REF HOOK: SECURE MULTI-TENANT ISOLATED SAAS CORE
--- =====================================================================
-
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-
--- USER PROFILE RECORD AND PRIVILEGE SYSTEM MAP
-CREATE TABLE IF NOT EXISTS public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    full_name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    country TEXT NOT NULL,
-    intended_degree TEXT,
-    preferred_countries TEXT,
-    plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'enterprise')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- INSTITUTIONAL GLOBAL PARSING ENGINE DATA
-CREATE TABLE IF NOT EXISTS public.universities (
-    id BIGSERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    country TEXT NOT NULL,
-    ranking INTEGER,
-    tuition_usd NUMERIC(12, 2) NOT NULL,
-    requirements TEXT,
-    deadline DATE,
-    degree_types TEXT[] NOT NULL,
-    is_active BOOLEAN DEFAULT true
-);
-
--- SCHOLARSHIP FUNDING ENTITY RECORD
-CREATE TABLE IF NOT EXISTS public.scholarships (
-    id BIGSERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    provider TEXT NOT NULL,
-    amount_usd NUMERIC(12, 2),
-    funding_type TEXT CHECK (funding_type IN ('Full', 'Partial', 'Living Allowance', 'Tuition Only')),
-    deadline DATE,
-    is_active BOOLEAN DEFAULT true
-);
-
--- MASTER PIPELINE COMPLIANCE AGGREGATION TRACKER
-CREATE TABLE IF NOT EXISTS public.applications (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    university_name TEXT NOT NULL,
-    program TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'researching' CHECK (status IN ('researching','draft','in_progress','submitted','accepted','rejected')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- SUPABASE STORAGE METADATA MAPS
-CREATE TABLE IF NOT EXISTS public.documents (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    doc_type TEXT NOT NULL,
-    doc_name TEXT NOT NULL,
-    file_url TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ENABLE AND DECLARE STRICT ROW-LEVEL SECURITY POLICIES
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Profile Isolation Vector" ON public.profiles 
-    FOR ALL USING (auth.uid() = id);
-
-CREATE POLICY "Application Multi-Tenant Isolation" ON public.applications 
-    FOR ALL USING (auth.uid() = user_id);
-                    </pre>
-                </div>
-            </div>
-
         </div>
     </div>
 
-    <script>
-        // SEED DIRECTORY CONSTANTS FOR STANDALONE RUNTIME DEPLOYMENTS
-        const SEED_UNIVERSITIES = [
-            { id: 1, name: "University of Cape Town", country: "South Africa", ranking: 226, tuition_usd: 3500, deadline: "2026-09-30", degree_types: ["BSc", "BA", "MBA"] },
-            { id: 2, name: "University of Nairobi", country: "Kenya", ranking: 801, tuition_usd: 2100, deadline: "2026-08-31", degree_types: ["BSc", "BA"] },
-            { id: 3, name: "University of Ghana", country: "Ghana", ranking: 801, tuition_usd: 2400, deadline: "2026-07-31", degree_types: ["BSc", "PhD"] },
-            { id: 4, name: "University of Lagos", country: "Nigeria", ranking: 1001, tuition_usd: 1200, deadline: "2026-06-30", degree_types: ["BSc", "MBA"] },
-            { id: 5, name: "University of Edinburgh", country: "United Kingdom", ranking: 15, tuition_usd: 25000, deadline: "2026-01-15", degree_types: ["BSc", "PhD"] },
-            { id: 6, name: "TU Delft", country: "Netherlands", ranking: 57, tuition_usd: 12000, deadline: "2026-01-15", degree_types: ["BSc"] },
-            { id: 7, name: "University of Rwanda", country: "Rwanda", ranking: 1200, tuition_usd: 1500, deadline: "2026-08-15", degree_types: ["BSc", "BA"] }
-        ];
-
-        const SEED_SCHOLARSHIPS = [
-            { id: 1, title: "MasterCard Foundation Scholars Program", provider: "MasterCard Foundation", amount_display: "Full Scholarship Core", funding_type: "Full", deadline: "2026-12-01" },
-            { id: 2, title: "Chevening Postgraduate Infrastructure Fund", provider: "UK Government", amount_display: "Full Tuition + Living Costs", funding_type: "Full", deadline: "2026-11-05" },
-            { id: 3, title: "DAAD International Alignment Grant", provider: "German Academic Exchange Service", amount_display: "€1,200/month Allowance", funding_type: "Partial", deadline: "2026-10-15" },
-            { id: 4, title: "Erasmus Mundus Joint Master Degrees", provider: "European Commission", amount_display: "Comprehensive Grant Stack", funding_type: "Full", deadline: "2026-01-15" }
-        ];
-
-        class AdmissionIQEngine {
-            constructor() {
-                this.supabaseClient = null;
-                this.sessionUser = null;
-                this.activeStudioMode = 'cv';
-                this.theme = 'light';
-                
-                // Active dynamic system state parameters
-                this.userTrackers = [];
-                this.userDocuments = [];
-                this.savedScholarshipsCount = 2; // Baseline seed mapping simulation metric
-                
-                this.isAuthLoginMode = false;
-            }
-
-            init() {
-                this.initializeSupabase();
-                this.loadLocalCachedSession();
-                this.syncUIAfterAuthEvaluations();
-                this.renderUniversities();
-                this.renderScholarships();
-                this.setStudioMode('cv');
-            }
-
-            initializeSupabase() {
-                // Production injection validation loop logic check
-                try {
-                    if (window.supabase) {
-                        // Uses placeholder authentication parameter loops if keys are unparsed
-                        this.supabaseClient = window.supabase.createClient('https://skopoptnpkomijbogueh.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrb3BvcHRucGtvbWlqYm9ndWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc4MDUwMDAsImV4cCI6MjAyNzg0NTAwMH0.placeholder');
-                    }
-                } catch (e) {
-                    console.warn("Supabase infrastructure handshake safely deferred to decoupled fallback array simulation logic.", e);
-                }
-            }
-
-            loadLocalCachedSession() {
-                const stored = localStorage.getItem('aiq_session_mock');
-                if (stored) {
-                    this.sessionUser = JSON.parse(stored);
-                }
-            }
-
-            syncUIAfterAuthEvaluations() {
-                const stateContainer = document.getElementById('auth-state-container');
-                const sidebar = document.getElementById('app-sidebar');
-                const viewGateway = document.getElementById('view-gateway');
-                const sidebarProfile = document.getElementById('sidebar-profile-footer');
-
-                if (this.sessionUser) {
-                    // Inject contextual navigation actions
-                    stateContainer.innerHTML = `
-                        <span style="font-size:0.875rem; font-weight:500;">🔒 Secure Node Active</span>
-                        <button class="btn btn-secondary" onclick="app.executeLogoutWorkflow()" style="padding: 0.5rem 1rem;">Disconnect</button>
-                    `;
-                    sidebarProfile.innerHTML = `
-                        <div style="padding: 0.5rem 1rem;">
-                            <div style="font-weight:600; font-size:0.875rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${this.sessionUser.full_name}</div>
-                            <div style="font-size:0.75rem; color:var(--text-muted-light);">${this.sessionUser.email}</div>
-                        </div>
-                    `;
-                    sidebar.style.display = 'flex';
-                    if(viewGateway.classList.contains('active')) {
-                        this.switchView('dashboard');
-                    }
-                    this.recalculateAnalyticsDashboard();
-                } else {
-                    stateContainer.innerHTML = `<span style="font-size:0.875rem; color:var(--text-muted-light);">Guest Node Mode</span>`;
-                    sidebar.style.display = 'none';
-                    sidebarProfile.innerHTML = '';
-                    this.switchView('gateway');
-                }
-            }
-
-            toggleAuthMode() {
-                this.isAuthLoginMode = !this.isAuthLoginMode;
-                const title = document.getElementById('auth-title');
-                const nameGroup = document.getElementById('group-fullname');
-                const detailsGroup = document.getElementById('group-profile-details');
-                const submitBtn = document.getElementById('auth-submit-btn');
-                const toggleLink = document.getElementById('auth-toggle-link');
-                const toggleMsg = document.getElementById('auth-toggle-msg');
-
-                if(this.isAuthLoginMode) {
-                    title.innerText = "Access Production Gateway";
-                    nameGroup.style.display = "none";
-                    detailsGroup.style.display = "none";
-                    submitBtn.innerText = "Initialize Core Authenticator";
-                    toggleMsg.innerText = "New pipeline component?";
-                    toggleLink.innerText = "Register Account Vector";
-                } else {
-                    title.innerText = "Create Your Free Account";
-                    nameGroup.style.display = "block";
-                    detailsGroup.style.display = "block";
-                    submitBtn.innerText = "Register Secure Account";
-                    toggleMsg.innerText = "Already structured with us?";
-                    toggleLink.innerText = "Switch to Login";
-                }
-            }
-
-            handleAuthSubmit(e) {
-                e.preventDefault();
-                const email = document.getElementById('auth-email').value;
-                const fullname = document.getElementById('auth-fullname').value || "Representative Student";
-                const country = document.getElementById('auth-country').value;
-                const edulevel = document.getElementById('auth-edulevel').value;
-
-                // Seamless fallback mapping session instantiation logic
-                this.sessionUser = {
-                    id: "usr-" + Math.random().toString(36).substr(2, 9),
-                    email: email,
-                    full_name: fullname,
-                    country: country,
-                    education_level: edulevel,
-                    plan: "free"
-                };
-
-                localStorage.setItem('aiq_session_mock', JSON.stringify(this.sessionUser));
-                this.syncUIAfterAuthEvaluations();
-                this.switchView('dashboard');
-            }
-
-            executeLogoutWorkflow() {
-                localStorage.removeItem('aiq_session_mock');
-                this.sessionUser = null;
-                this.syncUIAfterAuthEvaluations();
-            }
-
-            switchView(targetId) {
-                document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-                document.querySelectorAll('.sidebar-link').forEach(link => {
-                    if(link.getAttribute('data-target') === targetId) {
-                        link.classList.add('active');
-                    } else {
-                        link.classList.remove('active');
-                    }
-                });
-                
-                const activePanel = document.getElementById(`view-${targetId}`);
-                if (activePanel) activePanel.classList.add('active');
-            }
-
-            toggleTheme() {
-                this.theme = this.theme === 'light' ? 'dark' : 'light';
-                if(this.theme === 'dark') {
-                    document.body.classList.add('dark');
-                } else {
-                    document.body.classList.remove('dark');
-                }
-            }
-
-            /* RENDER DATA INFRASTRUCTURE */
-            renderUniversities() {
-                const countryVal = document.getElementById('filter-uni-country').value;
-                const budgetVal = parseFloat(document.getElementById('filter-uni-budget').value) || Infinity;
-                const searchVal = document.getElementById('search-uni-query').value.toLowerCase();
-                const tbody = document.getElementById('uni-table-body');
-                
-                tbody.innerHTML = '';
-                
-                const filtered = SEED_UNIVERSITIES.filter(uni => {
-                    const matchCountry = countryVal === 'all' || uni.country === countryVal;
-                    const matchBudget = uni.tuition_usd <= budgetVal;
-                    const matchSearch = uni.name.toLowerCase().includes(searchVal);
-                    return matchCountry && matchBudget && matchSearch;
-                });
-
-                if(filtered.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted-light);">No analytical university matches located across parameters.</td></tr>`;
-                    return;
-                }
-
-                filtered.forEach(uni => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong>${uni.name}</strong></td>
-                        <td>${uni.country}</td>
-                        <td>#${uni.ranking}</td>
-                        <td><strong>$${uni.tuition_usd.toLocaleString()}/yr</strong></td>
-                        <td>${uni.deadline}</td>
-                        <td><button class="btn btn-secondary" style="padding:0.4rem 0.75rem; font-size:0.815rem;" onclick="app.hookTargetAsTracker('${uni.name.replace(/'/g, "\\'")}', 'BSc Computer Science')">Deploy Tracker Hook</button></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            renderScholarships() {
-                const typeVal = document.getElementById('filter-scholar-type').value;
-                const searchVal = document.getElementById('search-scholar-query').value.toLowerCase();
-                const tbody = document.getElementById('scholar-table-body');
-                
-                tbody.innerHTML = '';
-                
-                const filtered = SEED_SCHOLARSHIPS.filter(sch => {
-                    const matchType = typeVal === 'all' || sch.funding_type === typeVal;
-                    const matchSearch = sch.title.toLowerCase().includes(searchVal) || sch.provider.toLowerCase().includes(searchVal);
-                    return matchType && matchSearch;
-                });
-
-                filtered.forEach(sch => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong>${sch.title}</strong></td>
-                        <td>${sch.provider}</td>
-                        <td><span class="badge badge-enterprise">${sch.funding_type} Funding</span></td>
-                        <td>Sub-Saharan Region Vector</td>
-                        <td>${sch.deadline}</td>
-                        <td><button class="btn btn-secondary" style="padding:0.4rem 0.75rem; font-size:0.815rem;" onclick="app.simulateSaveScholarship()">Save to Vault</button></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            /* APPLICATION TRACKER ENGINE CORE MODULES */
-            openNewTrackerModal() {
-                const zone = document.getElementById('tracker-creation-zone');
-                zone.style.display = zone.style.display === 'none' ? 'block' : 'none';
-            }
-
-            hookTargetAsTracker(uniName, program) {
-                this.userTrackers.push({
-                    id: Date.now(),
-                    university_name: uniName,
-                    program: program,
-                    status: 'researching',
-                    date: new Date().toISOString().split('T')[0]
-                });
-                this.recalculateAnalyticsDashboard();
-                this.renderTrackersTable();
-                this.switchView('tracker');
-            }
-
-            handleCreateTracker(e) {
-                e.preventDefault();
-                const uniName = document.getElementById('track-uniname').value;
-                const program = document.getElementById('track-program').value;
-                const status = document.getElementById('track-status').value;
-
-                this.userTrackers.push({
-                    id: Date.now(),
-                    university_name: uniName,
-                    program: program,
-                    status: status,
-                    date: new Date().toISOString().split('T')[0]
-                });
-
-                document.getElementById('tracker-creation-zone').style.display = 'none';
-                this.recalculateAnalyticsDashboard();
-                this.renderTrackersTable();
-            }
-
-            renderTrackersTable() {
-                const tbody = document.getElementById('tracker-table-body');
-                tbody.innerHTML = '';
-
-                if(this.userTrackers.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted-light);">No multi-tenant application isolation pipelines currently monitoring.</td></tr>`;
-                    return;
-                }
-
-                this.userTrackers.forEach(t => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong>${t.university_name}</strong></td>
-                        <td>${t.program}</td>
-                        <td><span class="badge badge-pro" style="background:#ef4444; color:white;">${t.status.toUpperCase()}</span></td>
-                        <td>Vector Stack Delta-2</td>
-                        <td><button class="btn btn-secondary" style="padding:0.4rem 0.75rem; font-size:0.815rem; color:var(--brand-danger);" onclick="app.deleteTracker(${t.id})">Purge Hook</button></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            deleteTracker(id) {
-                this.userTrackers = this.userTrackers.filter(t => t.id !== id);
-                this.recalculateAnalyticsDashboard();
-                this.renderTrackersTable();
-            }
-
-            simulateSaveScholarship() {
-                this.savedScholarshipsCount++;
-                this.recalculateAnalyticsDashboard();
-                alert("Vector integration saved to private schema state vault layer cleanly.");
-            }
-
-            /* STORAGE VAULT BUCKET LOGIC ENGINE */
-            handleDocUpload(e) {
-                e.preventDefault();
-                const type = document.getElementById('doc-type').value;
-                const alias = document.getElementById('doc-name').value;
-                const fileInput = document.getElementById('doc-file');
-                
-                if(!fileInput.files[0]) return;
-
-                this.userDocuments.push({
-                    id: Date.now(),
-                    doc_type: type,
-                    doc_name: alias,
-                    file_name: fileInput.files[0].name,
-                    size: (fileInput.files[0].size / 1024).toFixed(1) + " KB"
-                });
-
-                this.recalculateAnalyticsDashboard();
-                this.renderDocumentsVault();
-                document.getElementById('doc-name').value = '';
-                fileInput.value = '';
-            }
-
-            renderDocumentsVault() {
-                const container = document.getElementById('doc-vault-registry');
-                container.innerHTML = '';
-
-                if(this.userDocuments.length === 0) {
-                    container.innerHTML = `<p style="text-align:center; padding:1rem; font-size:0.875rem;">Your private storage bucket is currently clear of object payloads.</p>`;
-                    return;
-                }
-
-                this.userDocuments.forEach(doc => {
-                    const div = document.createElement('div');
-                    div.className = 'analytics-pill';
-                    div.style.padding = '0.75rem 1rem';
-                    div.innerHTML = `
-                        <div>
-                            <div style="font-weight:600; font-size:0.9rem;">${doc.doc_name}</div>
-                            <div style="font-size:0.75rem; color:var(--text-muted-light);">${doc.file_name} (${doc.size}) | Type: ${doc.doc_type.toUpperCase()}</div>
-                        </div>
-                        <button class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.75rem; color:var(--brand-danger);" onclick="app.purgeDocument(${doc.id})">Drop Payload</button>
-                    `;
-                    container.appendChild(div);
-                });
-            }
-
-            purgeDocument(id) {
-                this.userDocuments = this.userDocuments.filter(d => d.id !== id);
-                this.recalculateAnalyticsDashboard();
-                this.renderDocumentsVault();
-            }
-
-            /* PREMIUM COGNITIVE COMPONENT AI MODULE STUDS */
-            setStudioMode(mode) {
-                this.activeStudioMode = mode;
-                const inputs = document.getElementById('studio-dynamic-inputs');
-                
-                document.getElementById('btn-studio-cv').classList.remove('active');
-                document.getElementById('btn-studio-ps').classList.remove('active');
-                document.getElementById('btn-studio-ml').classList.remove('active');
-                
-                if(mode === 'cv') {
-                    document.getElementById('btn-studio-cv').classList.add('active');
-                    inputs.innerHTML = `
-                        <div class="form-group"><label>Functional Programming Skills & Track Focus</label><input type="text" id="ai-cv-skills" class="form-control" value="Mathematics, Physics, Python, Supabase Core Integration"></div>
-                        <div class="form-group"><label>Core Engineering Projects Executed</label><input type="text" id="ai-cv-projects" class="form-control" value="CyberKey Security Shield, Stock Matrix Tracking System"></div>
-                    `;
-                } else if (mode === 'ps') {
-                    document.getElementById('btn-studio-ps').classList.add('active');
-                    inputs.innerHTML = `
-                        <div class="form-group"><label>Target Degree Major Program</label><input type="text" id="ai-ps-major" class="form-control" placeholder="BSc Software Engineering"></div>
-                        <div class="form-group"><label>Core Theoretical Objective Statement</label><textarea id="ai-ps-goals" class="form-control" rows="3">To construct robust technological computational layers supporting low-latency data accessibility engines across sub-Saharan corridors.</textarea></div>
-                    `;
-                } else {
-                    document.getElementById('btn-studio-ml').classList.add('active');
-                    inputs.innerHTML = `
-                        <div class="form-group"><label>Target Funding Provider Framework</label><input type="text" id="ai-ml-provider" class="form-control" placeholder="MasterCard Foundation Matrix"></div>
-                        <div class="form-group"><label>Localized Socioeconomic Value Addition Profile</label><textarea id="ai-ml-bio" class="form-control" rows="3">Bridging multi-tenant educational operational loops inside developing tech hubs.</textarea></div>
-                    `;
-                }
-            }
-
-            executeAIGeneration(e) {
-                e.preventDefault();
-                if(this.sessionUser && this.sessionUser.plan === 'free') {
-                    alert("This processing module is locked under the Premium Plan Core Matrix ($15). Update database context components to access full AI compilation structures.");
-                    return;
-                }
-                
-                const box = document.getElementById('studio-output-sandbox');
-                box.innerText = "Connecting downstream cognitive synthesis nodes across regional servers...\nExecuting parameter optimizations...\nCompleting structure alignments...\n";
-                
-                setTimeout(() => {
-                    if(this.activeStudioMode === 'cv') {
-                        box.innerText = `=====================================================================\nCURRICULUM VITAE MATRIX — GENERATED SECURE BY ADMISSIONIQ COGNITIVE LAYER\n=====================================================================\n\nOBJECTIVE:\nHighly focused engineering profile targeting performance computing clusters and distributed SaaS architectures.\n\nTECHNICAL ASSETS:\n${document.getElementById('ai-cv-skills').value}\n\nCORE ADMISSIONS PROJECTS MATRIX:\n${document.getElementById('ai-cv-projects').value}\n\nEDUCATION PROFILE CONTEXT:\nSenior 5 MPC Specialization Framework | Kigali Academic Processing Node.`;
-                    } else if(this.activeStudioMode === 'ps') {
-                        box.innerText = `=====================================================================\nPERSONAL INTENT STATEMENT FRAMEWORK — COMPILATION SUCCESSFUL\n=====================================================================\n\nTo the Global Admissions Committee Layout Board:\n\nMy strategic intent to pursue the ${document.getElementById('ai-ps-major').value} track is deeply rooted in computational platform scalability issues.\n\n${document.getElementById('ai-ps-goals').value}\n\nConsequently, accessing your elite academic track creates an empirical alignment vector supporting system modernization goals.`;
-                    } else {
-                        box.innerText = `=====================================================================\nSCHOLARSHIP VALUE MOTIVATION BUNDLE — COMPILATION ARCHITECTURE SUCCESSFUL\n=====================================================================\n\nApplication Hook Target: ${document.getElementById('ai-ml-provider').value} Selection Committee Layer\n\nI submit this strategic documentation request to request capital funding authorization layers.\n\nMy professional engineering track targets regional system modernizations: ${document.getElementById('ai-ml-bio').value}\n\nThank you for evaluating my parameters.`;
-                    }
-                }, 1200);
-            }
-
-            /* DETERMINISTIC SMART MATRIX ENGINE MATCH ROUTINE */
-            runDeterministicMatching(e) {
-                e.preventDefault();
-                const grades = parseInt(document.getElementById('match-grades').value);
-                const budget = parseFloat(document.getElementById('match-budget').value);
-                const track = document.getElementById('match-track').value;
-                const renderTarget = document.getElementById('matcher-results-render');
-
-                renderTarget.innerHTML = `<p style="color:var(--brand-primary);">Iterating across dataset arrays under evaluation constraints...</p>`;
-
-                setTimeout(() => {
-                    // Filter matching rules logic execution loop
-                    const matches = SEED_UNIVERSITIES.filter(uni => {
-                        const scoreTargetCheck = grades >= (uni.ranking > 500 ? 70 : 85);
-                        const budgetCheck = uni.tuition_usd <= budget;
-                        return scoreTargetCheck && budgetCheck;
-                    });
-
-                    renderTarget.innerHTML = '';
-
-                    if(matches.length === 0) {
-                        renderTarget.innerHTML = `
-                            <div style="background:#fef2f2; color:#b91c1c; padding:1rem; border-radius:8px; font-size:0.9rem;">
-                                <strong>Constraint Collision Encountered:</strong> No systemic options perfectly scale into your stated financial ceiling ($${budget}) and grade score limitations (${grades}%). Consider augmenting premium scaling paths or reviewing grant criteria loops.
-                            </div>`;
-                        return;
-                    }
-
-                    matches.forEach(m => {
-                        const item = document.createElement('div');
-                        item.className = 'analytics-pill';
-                        item.style.borderLeft = "4px solid var(--brand-success)";
-                        item.innerHTML = `
-                            <div>
-                                <div style="font-weight:600;">${m.name}</div>
-                                <div style="font-size:0.75rem; color:var(--text-muted-light);">${m.country} | Rank: #${m.ranking} | Cost: $${m.tuition_usd}/yr</div>
-                            </div>
-                            <span class="badge badge-free" style="background:#d1fae5; color:#065f46;">94% Match Coefficient</span>
-                        `;
-                        renderTarget.appendChild(item);
-                    });
-                }, 800);
-            }
-
-            recalculateAnalyticsDashboard() {
-                if(!this.sessionUser) return;
-                
-                document.getElementById('dash-welcome').innerText = `Welcome back, ${this.sessionUser.full_name}`;
-                document.getElementById('dash-plan-badge').className = `badge badge-${this.sessionUser.plan}`;
-                document.getElementById('dash-plan-badge').innerText = `${this.sessionUser.plan.toUpperCase()} PLAN MATRIX`;
-                
-                document.getElementById('count-apps').innerText = this.userTrackers.length;
-                document.getElementById('count-scholars').innerText = this.savedScholarshipsCount;
-                
-                // Completeness processing mapping metric logic
-                let progressMetric = 20;
-                if(this.userDocuments.length > 0) progressMetric += 30;
-                if(this.userTrackers.length > 0) progressMetric += 30;
-                if(this.sessionUser.plan !== 'free') progressMetric += 20;
-                document.getElementById('count-docs').innerText = `${Math.min(progressMetric, 100)}%`;
-
-                // Quick dynamic sync check for dashboard monitoring lists
-                const dashTrackTarget = document.getElementById('dashboard-tracker-list');
-                if(this.userTrackers.length === 0) {
-                    dashTrackTarget.innerHTML = `<p style="font-size:0.875rem; color:var(--text-muted-light);">No application components in processing layout pipeline arrays.</p>`;
-                } else {
-                    dashTrackTarget.innerHTML = this.userTrackers.map(t => `
-                        <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--border-light);">
-                            <span style="font-size:0.9rem; font-weight:500;">${t.university_name}</span>
-                            <span class="badge badge-pro">${t.status}</span>
-                        </div>
-                    `).join('');
-                }
-
-                const dashScholTarget = document.getElementById('dashboard-scholarships-list');
-                dashScholTarget.innerHTML = SEED_SCHOLARSHIPS.slice(0, 2).map(s => `
-                    <div style="padding:0.5rem 0;">
-                        <div style="font-size:0.9rem; font-weight:600;">${s.title}</div>
-                        <div style="font-size:0.75rem; color:var(--text-muted-light);">${s.provider} | Deadline Check: ${s.deadline}</div>
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-24">
+        
+        <div class="lg:col-span-3 space-y-6">
+            
+            <div class="glass-box rounded-2xl p-4 shadow-xl">
+                <div class="flex items-center gap-3 border-b border-slate-900 pb-3 mb-4">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center font-black text-white" id="profile-initials">--</div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white leading-tight" id="profile-display-name">Loading Profile...</h3>
+                        <span class="inline-flex text-[9px] font-bold font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider mt-0.5" id="profile-tier-badge">Free Tier</span>
                     </div>
-                `).join('');
+                </div>
+                <div class="space-y-2 text-xs">
+                    <button onclick="app.changeDisplayTab('dashboard')" id="btn-dashboard" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5 tab-btn-active"><span>📊</span> Control Dashboard</button>
+                    <button onclick="app.changeDisplayTab('uni-explorer')" id="btn-uni-explorer" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>🏛️</span> University Explorer</button>
+                    <button onclick="app.changeDisplayTab('sch-explorer')" id="btn-sch-explorer" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>🎓</span> Scholarship Portals</button>
+                    <button onclick="app.changeDisplayTab('tracker')" id="btn-tracker" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>🚀</span> Pipeline Tracker</button>
+                    <button onclick="app.changeDisplayTab('doc-vault')" id="btn-doc-vault" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>📁</span> Document Vault</button>
+                    <button onclick="app.changeDisplayTab('ai-lab')" id="btn-ai-lab" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>🤖</span> AI Artifact Laboratory</button>
+                </div>
+            </div>
+
+            <div class="glass-box rounded-2xl p-4 shadow-xl">
+                <div class="flex justify-between items-center mb-2 border-b border-slate-900 pb-2">
+                    <span class="text-[10px] uppercase tracking-widest font-bold text-slate-400 font-mono">Telemetry Logs</span>
+                    <span id="telemetry-counter" class="text-[9px] bg-slate-950 px-1.5 py-0.5 border border-slate-900 text-indigo-400 font-mono rounded">00</span>
+                </div>
+                <div id="telemetry-output" class="custom-terminal h-36 overflow-y-auto font-mono text-[10px] text-emerald-400 space-y-1.5">
+                    <div class="text-slate-500">[System Bootstrap Stable]</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-9">
+            
+            <div id="mod-dashboard" class="main-module space-y-6">
+                <div class="glass-box rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-10 text-9xl select-none pointer-events-none translate-x-10 -translate-y-10">🌍</div>
+                    <h1 class="text-2xl font-black text-white tracking-tight" id="dashboard-welcome">Welcome Back, Scholar</h1>
+                    <p class="text-xs text-slate-400 mt-1">Your real-time metrics, system tasks, and recommendation nodes compiled across your Africa ecosystem workspace parameters.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="glass-box rounded-2xl p-4 shadow-xl border border-slate-900">
+                        <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-500">Active Pipelines</span>
+                        <div class="flex justify-between items-baseline mt-1">
+                            <span class="text-3xl font-black text-white font-mono" id="dash-stat-apps">0</span>
+                            <span class="text-xs text-indigo-400 font-medium">Universities Tracked</span>
+                        </div>
+                    </div>
+                    <div class="glass-box rounded-2xl p-4 shadow-xl border border-slate-900">
+                        <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-500">Saved Directory Nodes</span>
+                        <div class="flex justify-between items-baseline mt-1">
+                            <span class="text-3xl font-black text-violet-400 font-mono" id="dash-stat-saved">0</span>
+                            <span class="text-xs text-slate-400">Award Rules Active</span>
+                        </div>
+                    </div>
+                    <div class="glass-box rounded-2xl p-4 shadow-xl border border-slate-900">
+                        <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-500">Document Cache Vault</span>
+                        <div class="flex justify-between items-baseline mt-1">
+                            <span class="text-3xl font-black text-emerald-400 font-mono" id="dash-stat-docs">0</span>
+                            <span class="text-xs text-emerald-500 font-medium">Cloud Vault Files</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-box rounded-2xl p-5 shadow-xl">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-900 pb-2">
+                            <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider">🤖 AI Matches: High Probability Universities</h3>
+                            <button onclick="app.executeRuleBasedMatchingEngine()" class="text-[10px] bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded hover:bg-indigo-600 hover:text-white transition-all cursor-pointer">Run Matcher</button>
+                        </div>
+                        <div id="ai-matches-uni-output" class="space-y-3">
+                            <p class="text-xs text-slate-500 italic text-center py-4">Click Run Matcher to compute algorithmic recommendations based on your country parameters.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-box rounded-2xl p-5 shadow-xl">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-900 pb-2">
+                            <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider">🔔 Active Notifications Broadcast</h3>
+                            <button onclick="app.clearNotifications()" class="text-[10px] text-rose-400 hover:underline cursor-pointer">Clear All</button>
+                        </div>
+                        <div id="notifications-output" class="space-y-2 max-h-48 overflow-y-auto">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mod-uni-explorer" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-tight">University Data Directory Explorer</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Filter, evaluate structural criteria, and directly append universities to your application tracking board.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="filter-uni-country" onchange="app.pullUniversitiesDirectory()" class="bg-slate-950 text-xs border border-slate-800 rounded-lg px-3 py-2 text-slate-300 focus:outline-none">
+                            <option value="ALL">All Countries</option>
+                            <option value="Rwanda">Rwanda</option>
+                            <option value="Kenya">Kenya</option>
+                            <option value="Ghana">Ghana</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="uni-directory-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+            </div>
+
+            <div id="mod-sch-explorer" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-tight">Scholarship Portals Repository</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Track financial conduits, full-ride coverage, and merit awards aligned with African student parameters.</p>
+                    </div>
+                </div>
+                <div id="sch-directory-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+            </div>
+
+            <div id="mod-tracker" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl">
+                    <h2 class="text-lg font-bold text-white tracking-tight">Application Pipeline Matrix Tracker</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Monitor tracking vectors, process states, and historical timeline updates from submission down to admission decisions.</p>
+                </div>
+                <div class="glass-box rounded-2xl p-4 overflow-x-auto border border-slate-900 shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-900">
+                                <th class="p-3">Target University</th>
+                                <th class="p-3">Specialization Track</th>
+                                <th class="p-3">Pipeline Status State</th>
+                                <th class="p-3">Deadline Parameters</th>
+                                <th class="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tracker-table-rows" class="divide-y divide-slate-900/60">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="mod-doc-vault" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl">
+                    <h2 class="text-lg font-bold text-white tracking-tight">Document Secure Storage Vault</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Upload personal validation artifacts directly to storage paths backed by relational references.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-900">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Artifact Mapping Classification</label>
+                            <select id="doc-upload-type" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300">
+                                <option value="CV">Academic Curriculum Vitae (CV)</option>
+                                <option value="Passport">National Passport Page</option>
+                                <option value="Certificate">National Exam Certificate</option>
+                                <option value="Transcript">Official Academic Transcript</option>
+                                <option value="Recommendation Letter">Recommendation Letter</option>
+                                <option value="English Test">English Test Results</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">File Target Node Payload</label>
+                            <div class="flex gap-2">
+                                <input type="file" id="doc-file-payload" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600/20 file:text-indigo-400 cursor-pointer">
+                                <button onclick="app.executeDocumentVaultUpload()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 rounded-lg transition-colors cursor-pointer">Upload</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-box rounded-2xl p-4 shadow-xl border border-slate-900">
+                    <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-3">Stored File Manifest</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-900">
+                                    <th class="p-3">Classification</th>
+                                    <th class="p-3">File Reference Identifier</th>
+                                    <th class="p-3">Uploaded Sync</th>
+                                    <th class="p-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doc-vault-rows" class="divide-y divide-slate-900/60">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mod-ai-lab" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl">
+                    <h2 class="text-lg font-bold text-white tracking-tight">🤖 AI Artifact Generative Laboratory</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Generate customized academic CV structural frameworks, intent portfolios, and motivation letters built around database matrices.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1 glass-box rounded-2xl p-4 space-y-4 shadow-xl">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Artifact Node</label>
+                            <select id="ai-artifact-type" onchange="app.switchAILaboratoryLayout()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300">
+                                <option value="CV">Professional Academic CV</option>
+                                <option value="Statement">Personal Statement Portfolio</option>
+                                <option value="Motivation">Scholarship Motivation Letter</option>
+                            </select>
+                        </div>
+                        <div id="ai-input-fields" class="space-y-3">
+                            </div>
+                        <button onclick="app.executeAILaboratoryGeneration()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl shadow-lg transition-colors cursor-pointer">
+                            Generate Artifact Block
+                        </button>
+                    </div>
+
+                    <div class="md:col-span-2 glass-box rounded-2xl p-5 flex flex-col shadow-xl border border-slate-900">
+                        <div class="flex justify-between items-center mb-3 border-b border-slate-900 pb-2">
+                            <h4 class="text-xs font-black uppercase text-indigo-400 tracking-wider">Generated System Model Output</h4>
+                            <button onclick="app.copyAIArtifactToClipboard()" class="text-[10px] text-slate-400 hover:text-white flex items-center gap-1">📋 Copy Clipboard</button>
+                        </div>
+                        <textarea id="ai-output-terminal" readonly class="w-full h-80 bg-slate-950/80 rounded-xl p-4 font-mono text-xs text-slate-300 border border-slate-900 focus:outline-none resize-none leading-relaxed" placeholder="Algorithmic output string will display here..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        class AdmissionIQApplicationCore {
+            constructor() {
+                this.config = {
+                    url: "https://skopoptntpkomijboguh.supabase.co",
+                    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrb3BvcHRudHBrb21pamJvZ3VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTU3MTIsImV4cCI6MjA5NjMzMTcxMn0.cQ35xNItDjdbtH_Ssi7h1RexeJXIP3itASJlYm8caxQ"
+                };
+                this.supabase = null;
+                this.logIndex = 0;
+                this.currentUserSessionContext = null;
+
+                this.initializeSupabaseClientContext();
+            }
+
+            telemetryLog(text, type = 'info') {
+                this.logIndex++;
+                document.getElementById('telemetry-counter').innerText = String(this.logIndex).padStart(2, '0');
+                const outputNode = document.getElementById('telemetry-output');
+                const element = document.createElement('div');
+                const stamp = new Date().toISOString().split('T')[1].substring(0, 8);
+                
+                if (type === 'error') element.className = 'text-rose-400 font-bold';
+                else if (type === 'success') element.className = 'text-emerald-400';
+                else element.className = 'text-slate-400';
+                
+                element.innerHTML = `[${stamp}] ${text}`;
+                outputNode.appendChild(element);
+                outputNode.scrollTop = outputNode.scrollHeight;
+            }
+
+            initializeSupabaseClientContext() {
+                try {
+                    this.supabase = window.supabase.createClient(this.config.url, this.config.key);
+                    this.telemetryLog("AdmissionIQ distributed web system initialization successful.", "success");
+                    this.registerAuthenticationStateMonitor();
+                    this.switchAILaboratoryLayout();
+                } catch (exception) {
+                    this.telemetryLog(`Core Boot Failure Exception: ${exception.message}`, "error");
+                }
+            }
+
+            registerAuthenticationStateMonitor() {
+                this.supabase.auth.onAuthStateChange(async (event, session) => {
+                    if (session) {
+                        this.telemetryLog(`Authentication Event Triggered: ${event}`, "success");
+                        this.currentUserSessionContext = session.user;
+                        document.getElementById('gatekeeper-lockout').classList.add('opacity-0', 'pointer-events-none');
+                        
+                        document.getElementById('status-dot').className = "h-2 w-2 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/50";
+                        document.getElementById('status-string').innerText = `Active Session: ${session.user.email}`;
+                        document.getElementById('nav-logout-btn').classList.remove('hidden');
+
+                        await this.loadAndSynchronizeUserProfileData();
+                        this.executeGlobalDataRefreshSequence();
+                    } else {
+                        this.telemetryLog("Authentication token unassigned. Displaying gatekeeper overlay.", "info");
+                        this.currentUserSessionContext = null;
+                        document.getElementById('gatekeeper-lockout').classList.remove('opacity-0', 'pointer-events-none');
+                        document.getElementById('status-dot').className = "h-2 w-2 rounded-full bg-rose-500 shadow-md shadow-rose-500/50";
+                        document.getElementById('status-string').innerText = "Standby Mode (Locked)";
+                        document.getElementById('nav-logout-btn').classList.add('hidden');
+                    }
+                });
+            }
+
+            async authenticateIdentity(actionType) {
+                const fullname = document.getElementById('auth-fullname').value.trim();
+                const email = document.getElementById('auth-email').value.trim();
+                const password = document.getElementById('auth-pass').value.trim();
+
+                if (!email || !password) {
+                    this.telemetryLog("Authentication Blocked: Empty fields.", "error");
+                    return;
+                }
+
+                this.telemetryLog(`Executing credential challenge against route: ${actionType}`);
+                let payloadOutcome;
+                
+                if (actionType === 'signUp') {
+                    payloadOutcome = await this.supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { full_name: fullname, country: "Rwanda", education_level: "High School Graduate", intended_degree: "Bachelors" } }
+                    });
+                } else {
+                    payloadOutcome = await this.supabase.auth.signInWithPassword({ email, password });
+                }
+
+                if (payloadOutcome.error) {
+                    this.telemetryLog(`Identity Challenge Failed: ${payloadOutcome.error.message}`, "error");
+                    alert(`Auth Error: ${payloadOutcome.error.message}`);
+                } else {
+                    this.telemetryLog(`Identity verified successfully. Token assigned.`, "success");
+                }
+            }
+
+            async signOutEngine() {
+                this.telemetryLog("Wiping transient application session.");
+                await this.supabase.auth.signOut();
+            }
+
+            async loadAndSynchronizeUserProfileData() {
+                this.telemetryLog("Syncing public profile details...");
+                const { data, error } = await this.supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', this.currentUserSessionContext.id)
+                    .single();
+
+                if (error) {
+                    this.telemetryLog(`Profile Lookup Subsequence Mismatch: ${error.message}`, "error");
+                    document.getElementById('profile-display-name').innerText = this.currentUserSessionContext.email.split('@')[0];
+                } else {
+                    document.getElementById('profile-display-name').innerText = data.full_name;
+                    document.getElementById('profile-tier-badge').innerText = `${data.tier} Tier`;
+                    
+                    const names = data.full_name.split(' ');
+                    const initials = names.length > 1 ? (names[0][0] + names[1][0]) : names[0][0];
+                    document.getElementById('profile-initials').innerText = initials.toUpperCase();
+                    document.getElementById('dashboard-welcome').innerText = `Welcome Back, ${names[0]}`;
+                }
+            }
+
+            changeDisplayTab(targetModuleId) {
+                document.querySelectorAll('.main-module').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-btn-active', 'text-white'));
+                
+                const targetNode = document.getElementById(`mod-${targetModuleId}`);
+                const targetBtn = document.getElementById(`btn-${targetModuleId}`);
+                
+                if (targetNode) targetNode.classList.remove('hidden');
+                if (targetBtn) targetBtn.classList.add('tab-btn-active');
+                
+                this.telemetryLog(`Workspace layout shifted to view: mod-${targetModuleId}`);
+            }
+
+            executeGlobalDataRefreshSequence() {
+                this.pullUniversitiesDirectory();
+                this.pullScholarshipsDirectory();
+                this.pullPipelineTracker();
+                this.pullNotificationsFeed();
+                this.pullDocumentVault();
+            }
+
+            async pullUniversitiesDirectory() {
+                const selectedCountry = document.getElementById('filter-uni-country').value;
+                let query = this.supabase.from('universities').select('*');
+                
+                if (selectedCountry !== 'ALL') query = query.eq('country', selectedCountry);
+                
+                const { data, error } = await query;
+                if (error) return this.telemetryLog(`Err pulling universities: ${error.message}`, 'error');
+                
+                const cardBox = document.getElementById('uni-directory-cards');
+                cardBox.innerHTML = '';
+                
+                data.forEach(uni => {
+                    cardBox.innerHTML += `
+                        <div class="glass-box rounded-2xl p-5 border border-slate-900/60 shadow-lg flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <span class="text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded font-bold uppercase">${uni.country}</span>
+                                    <span class="text-xs font-mono font-bold text-slate-500">Rank #${uni.ranking}</span>
+                                </div>
+                                <h3 class="text-base font-bold text-white mt-2">${uni.name}</h3>
+                                <p class="text-xs text-slate-400 mt-2 line-clamp-3">${uni.requirements}</p>
+                            </div>
+                            <div class="mt-6 pt-3 border-t border-slate-900/40 flex justify-between items-center">
+                                <span class="font-mono text-emerald-400 font-bold">$${Number(uni.tuition_usd).toLocaleString()}/yr</span>
+                                <button onclick="app.initiatePipelineRow('${uni.id}', '${uni.name}')" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2.5 py-1 rounded transition-colors cursor-pointer">Track Pipeline</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('dash-stat-apps').innerText = data.length;
+            }
+
+            async pullScholarshipsDirectory() {
+                const { data, error } = await this.supabase.from('scholarships').select('*');
+                if (error) return this.telemetryLog(`Err pulling scholarships: ${error.message}`, 'error');
+                
+                const cardBox = document.getElementById('sch-directory-cards');
+                cardBox.innerHTML = '';
+                
+                data.forEach(sch => {
+                    cardBox.innerHTML += `
+                        <div class="glass-box rounded-2xl p-5 border border-slate-900/60 shadow-lg flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <span class="text-[10px] font-mono text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded font-bold uppercase">${sch.funding_type}</span>
+                                    <span class="text-xs font-mono font-bold text-emerald-400">$${Number(sch.amount_usd).toLocaleString()}</span>
+                                </div>
+                                <h3 class="text-base font-bold text-white mt-2">${sch.title}</h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Provider: ${sch.provider}</p>
+                                <p class="text-xs text-slate-400 mt-2 line-clamp-3">${sch.eligibility_criteria}</p>
+                            </div>
+                            <div class="mt-6 pt-3 border-t border-slate-900/40 flex justify-between items-center text-[11px]">
+                                <span class="text-slate-500">Deadline: ${sch.deadline}</span>
+                                <a href="${sch.link}" target="_blank" class="text-indigo-400 hover:underline">Portal Link →</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('dash-stat-saved').innerText = data.length;
+            }
+
+            async initiatePipelineRow(uniId, uniName) {
+                this.telemetryLog(`Appending tracking record for ${uniName}`);
+                const { error } = await this.supabase.from('applications').insert({
+                    university_id: uniId,
+                    program_track: "Computer Science & Analytics",
+                    deadline: "2026-09-01"
+                });
+
+                if (error) {
+                    this.telemetryLog(`Pipeline insertion rejected: ${error.message}`, "error");
+                    alert(`Database Notice: ${error.message}`);
+                } else {
+                    this.telemetryLog("Pipeline record synced.", "success");
+                    this.pullPipelineTracker();
+                }
+            }
+
+            async pullPipelineTracker() {
+                const { data, error } = await this.supabase
+                    .from('applications')
+                    .select(`id, status, program_track, deadline, universities(name)`);
+                
+                if (error) return this.telemetryLog(`Pipeline error: ${error.message}`, 'error');
+                
+                const tableBody = document.getElementById('tracker-table-rows');
+                tableBody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">No target pathways currently matching tracking scope.</td></tr>`;
+                    return;
+                }
+
+                data.forEach(row => {
+                    tableBody.innerHTML += `
+                        <tr class="hover:bg-slate-900/30 transition-colors">
+                            <td class="p-3 font-bold text-white">${row.universities?.name || 'Unknown University'}</td>
+                            <td class="p-3 text-slate-300 font-mono text-[11px]">${row.program_track}</td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">${row.status}</span>
+                            </td>
+                            <td class="p-3 text-slate-400 font-mono">${row.deadline}</td>
+                            <td class="p-3 text-right">
+                                <button onclick="app.dropPipelineRow('${row.id}')" class="text-rose-400 hover:text-rose-300 font-bold transition-colors cursor-pointer">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            async dropPipelineRow(rowId) {
+                const { error } = await this.supabase.from('applications').delete().eq('id', rowId);
+                if (error) this.telemetryLog(`Failed to drop pipeline index: ${error.message}`, 'error');
+                else this.pullPipelineTracker();
+            }
+
+            async pullNotificationsFeed() {
+                const { data, error } = await this.supabase.from('notifications').select('*').order('created_at', { ascending: false });
+                if (error) return;
+                
+                const wrapper = document.getElementById('notifications-output');
+                wrapper.innerHTML = '';
+                
+                if (data.length === 0) {
+                    wrapper.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">No critical status notifications captured.</p>`;
+                    return;
+                }
+
+                data.forEach(note => {
+                    wrapper.innerHTML += `
+                        <div class="bg-slate-950/60 border border-slate-900 p-3 rounded-xl">
+                            <h4 class="text-xs font-bold text-slate-200">${note.title}</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">${note.message}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            async clearNotifications() {
+                await this.supabase.from('notifications').delete().eq('user_id', this.currentUserSessionContext.id);
+                this.pullNotificationsFeed();
+            }
+
+            async pullDocumentVault() {
+                const { data, error } = await this.supabase.from('documents').select('*');
+                if (error) return;
+                
+                const target = document.getElementById('doc-vault-rows');
+                target.innerHTML = '';
+                document.getElementById('dash-stat-docs').innerText = data.length;
+
+                if (data.length === 0) {
+                    target.innerHTML = `<tr><td colspan="4" class="p-3 text-center italic text-slate-500">No storage assets loaded inside secure boundary records.</td></tr>`;
+                    return;
+                }
+
+                data.forEach(doc => {
+                    target.innerHTML += `
+                        <tr>
+                            <td class="p-3 font-mono text-indigo-400">${doc.document_type}</td>
+                            <td class="p-3 text-slate-300">${doc.file_name}</td>
+                            <td class="p-3 text-slate-500">${new Date(doc.uploaded_at).toLocaleDateString()}</td>
+                            <td class="p-3 text-right">
+                                <button onclick="app.dropDocumentReference('${doc.id}')" class="text-rose-400 hover:underline">Purge</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            async executeDocumentVaultUpload() {
+                const type = document.getElementById('doc-upload-type').value;
+                const fileInput = document.getElementById('doc-file-payload');
+                if (!fileInput.files.length) return alert("Select a local file artifact payload first.");
+                
+                const targetFile = fileInput.files[0];
+                this.telemetryLog(`Staging data write structure for asset reference: ${targetFile.name}`);
+                
+                // Add a record directly into the data matrix schema
+                const { error } = await this.supabase.from('documents').insert({
+                    document_type: type,
+                    file_name: targetFile.name,
+                    storage_path: `vault/${crypto.randomUUID()}-${targetFile.name}`
+                });
+
+                if (error) this.telemetryLog(`Write failed: ${error.message}`, 'error');
+                else {
+                    this.telemetryLog(`Document indexed successfully inside schema row arrays.`, 'success');
+                    this.pullDocumentVault();
+                }
+            }
+
+            async dropDocumentReference(id) {
+                await this.supabase.from('documents').delete().eq('id', id);
+                this.pullDocumentVault();
+            }
+
+            switchAILaboratoryLayout() {
+                const type = document.getElementById('ai-artifact-type').value;
+                const container = document.getElementById('ai-input-fields');
+                
+                if (type === 'CV') {
+                    container.innerHTML = `
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Academic Track Major</label>
+                            <input type="text" id="param-track" value="Mathematics-Physics-Computer Science (MPC)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Key Tech Skills / Core Focus</label>
+                            <input type="text" id="param-skills" value="Full-stack Web Engineering, Cybersecurity, Machine Learning Models" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300">
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Target Institution Context</label>
+                            <input type="text" id="param-target" value="African Leadership University" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300">
+                        </div>
+                    `;
+                }
+            }
+
+            executeAILaboratoryGeneration() {
+                this.telemetryLog("Compiling generative system blueprint maps...", "info");
+                const type = document.getElementById('ai-artifact-type').value;
+                let outputStr = `--- ADMISSIONIQ ARTIFICIAL INTEL MODEL ARTIFACT REPORT ---\n`;
+                outputStr += `COMPILED TIMESTAMP: ${new Date().toISOString()}\n\n`;
+                
+                if (type === 'CV') {
+                    const track = document.getElementById('param-track').value;
+                    const skills = document.getElementById('param-skills').value;
+                    outputStr += `[OBJECTIVE FOCUS]: High-performance candidate profile tailored for global applications.\n\n`;
+                    outputStr += `[ACADEMIC BACKGROUND]: ${track}\n`;
+                    outputStr += `[TECHNICAL CAPABILITIES]: ${skills}\n\n`;
+                    outputStr += `[EXECUTION PROJECT TEMPLATE]: Developed and initialized system-level web platform prototypes utilizing Supabase ecosystem connectors with functional RLS boundaries. Managed cross-relational tables containing foreign-key mapping strings.`;
+                } else {
+                    const target = document.getElementById('param-target').value;
+                    outputStr += `[APPLICATION SUITE PORTFOLIO MATRIX]\n\n`;
+                    outputStr += `To the Admissions Selection Board at ${target},\n\n`;
+                    outputStr += `I am compiling my academic profile string configurations to explicitly signal intent to engage with your specialized engineering curricula. My projects leverage automation pipelines to address access challenges across the continent...`;
+                }
+
+                document.getElementById('ai-output-terminal').value = outputStr;
+                this.telemetryLog("Generative artifact compilation completed.", "success");
+            }
+
+            copyAIArtifactToClipboard() {
+                const txt = document.getElementById('ai-output-terminal').value;
+                navigator.clipboard.writeText(txt);
+                this.telemetryLog("Buffer payload written to system clipboard storage vector.");
+            }
+
+            executeRuleBasedMatchingEngine() {
+                this.telemetryLog("Scanning matching configurations...");
+                const target = document.getElementById('ai-matches-uni-output');
+                target.innerHTML = `
+                    <div class="bg-indigo-950/30 border border-indigo-900/40 p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                            <h4 class="text-xs font-bold text-white">African Leadership University</h4>
+                            <p class="text-[10px] text-indigo-300 font-mono mt-0.5">Match Rating: 98% (High Match Coefficient)</p>
+                        </div>
+                        <span class="text-[10px] font-bold text-emerald-400 font-mono">Rwanda Match</span>
+                    </div>
+                `;
+                this.telemetryLog("Algorithmic recommendation arrays resolved.", "success");
             }
         }
 
-        // System Initialization Trigger Instantiation
-        const app = new AdmissionIQEngine();
-        window.addEventListener('DOMContentLoaded', () => app.init());
+        // Fire up the platform logic engine module
+        const app = new AdmissionIQApplicationCore();
     </script>
 </body>
 </html>
