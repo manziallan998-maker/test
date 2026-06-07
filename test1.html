@@ -2,266 +2,848 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>AdmissionIQ | AI University Application Assistant for African Students</title>
-    <!-- Supabase JS Library -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdmissionIQ - AI University & Scholarship Platform</title>
+    <!-- Tailwind CSS Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase Core Javascript Client JS Engine Package SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Chart.js for analytics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- Google Fonts & Font Awesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f8fafc;
-            color: #0f172a;
-            transition: background 0.3s, color 0.3s;
-        }
-        body.dark { background: #0f172a; color: #e2e8f0; }
-        body.dark .card, body.dark .modal-content, body.dark .navbar, body.dark .sidebar, body.dark .auth-form,
-        body.dark input, body.dark textarea, body.dark select { background: #1e293b; border-color: #334155; color: #f1f5f9; }
-        body.dark .btn-outline { border-color: #475569; color: #cbd5e1; }
-        
-        /* Layout */
-        .app-container { display: flex; min-height: 100vh; }
-        .sidebar {
-            width: 280px; background: white; border-right: 1px solid #e2e8f0;
-            padding: 2rem 1rem; position: fixed; height: 100vh; overflow-y: auto;
-        }
-        .main-content { flex: 1; margin-left: 280px; padding: 2rem; }
-        .navbar {
-            background: white; border-bottom: 1px solid #e2e8f0; padding: 1rem 2rem;
-            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
-        }
-        .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #3B82F6, #10B981, #8B5CF6); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .card { background: white; border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; transition: all 0.2s; }
-        .card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
-        .btn { padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-size: 0.9rem; }
-        .btn-primary { background: linear-gradient(135deg, #3B82F6, #2563eb); color: white; }
-        .btn-primary:hover { transform: scale(1.02); opacity: 0.9; }
-        .btn-outline { background: transparent; border: 1px solid #cbd5e1; }
-        .btn-success { background: #10B981; color: white; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-        .stat-card { text-align: center; padding: 1.5rem; }
-        .stat-card i { font-size: 2rem; margin-bottom: 0.5rem; color: #3B82F6; }
-        .deadline-item { padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .mode-toggle { cursor: pointer; font-size: 1.3rem; }
-        .auth-form { max-width: 450px; margin: 4rem auto; }
-        .hidden { display: none; }
-        .alert { padding: 0.75rem; border-radius: 0.75rem; margin-bottom: 1rem; }
-        .alert-error { background: #fee2e2; color: #b91c1c; }
-        .alert-success { background: #dcfce7; color: #166534; }
-        .input-field { width: 100%; padding: 0.75rem; border-radius: 0.75rem; border: 1px solid #cbd5e1; background: white; margin-bottom: 1rem; }
-        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 600; }
-        .badge-accepted { background: #10B98120; color: #10B981; }
-        .badge-pending { background: #F59E0B20; color: #F59E0B; }
-        .sidebar-item { padding: 0.75rem 1rem; margin: 0.25rem 0; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem; }
-        .sidebar-item:hover, .sidebar-item.active { background: #3B82F610; color: #3B82F6; }
-        @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
-        .progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin: 0.5rem 0; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #10B981); border-radius: 3px; transition: width 0.3s; }
+        .linear-dark { background: linear-gradient(135deg, #060814 0%, #0d0f22 100%); }
+        .glass-box { background: rgba(13, 17, 39, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.04); }
+        .tab-btn-active { background: rgba(79, 70, 229, 0.15); border-color: #4f46e5; color: #ffffff; }
+        .custom-terminal::-webkit-scrollbar { width: 4px; }
+        .custom-terminal::-webkit-scrollbar-track { background: transparent; }
+        .custom-terminal::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
     </style>
 </head>
-<body>
-<div id="app">
-    <!-- Auth Section -->
-    <div id="authSection" class="main-content" style="margin-left:0; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-        <div class="auth-form card">
-            <div style="text-align:center; margin-bottom:2rem;">
-                <div class="logo" style="font-size:2.5rem;">AdmissionIQ</div>
-                <p style="margin-top:0.5rem;">AI-Powered Admissions for African Students</p>
+<body class="linear-dark text-slate-200 min-h-screen font-sans antialiased selection:bg-indigo-500/30">
+
+    <!-- PLATFORM TOP NAVIGATION SHELL -->
+    <nav class="border-b border-slate-900 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-xl shadow-indigo-600/20">IQ</div>
+            <div>
+                <span class="text-lg font-black tracking-tight text-white block">AdmissionIQ</span>
+                <span class="text-[10px] text-indigo-400 font-mono tracking-widest uppercase block font-semibold">AI Admissions Counselor for Africa</span>
             </div>
-            <div id="authTabs" style="display:flex; gap:1rem; margin-bottom:1.5rem;">
-                <button id="showLoginBtn" class="btn btn-primary" style="flex:1">Login</button>
-                <button id="showSignupBtn" class="btn btn-outline" style="flex:1">Sign Up</button>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div id="engine-status-badge" class="text-xs font-mono bg-slate-950 border border-slate-900 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <span id="status-dot" class="h-2 w-2 rounded-full bg-rose-500 shadow-md shadow-rose-500/50"></span>
+                <span id="status-string" class="text-slate-400 font-medium">Standby Mode (Locked)</span>
             </div>
-            <div id="loginForm">
-                <input type="email" id="loginEmail" placeholder="Email address" class="input-field">
-                <input type="password" id="loginPassword" placeholder="Password" class="input-field">
-                <button id="doLogin" class="btn btn-primary" style="width:100%">Login</button>
-                <p id="loginMessage" class="alert hidden"></p>
+            <button id="nav-logout-btn" onclick="app.signOutEngine()" class="hidden text-xs bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/50 px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                Sign Out
+            </button>
+        </div>
+    </nav>
+
+    <!-- SYSTEM ACCESS OVERLAY (SHIELDS MVP WHEN UNAUTHORIZED) -->
+    <div id="gatekeeper-lockout" class="fixed inset-0 top-[73px] bg-slate-950/95 backdrop-blur-md z-40 flex items-center justify-center p-4 transition-all duration-300">
+        <div class="w-full max-w-md glass-box rounded-2xl p-6 shadow-2xl border border-slate-900">
+            <div class="text-center mb-6">
+                <div class="inline-flex h-12 w-12 rounded-full bg-indigo-600/10 text-indigo-400 items-center justify-center text-xl mb-2">🔐</div>
+                <h2 class="text-xl font-bold text-white">Access Verification Protocol</h2>
+                <p class="text-xs text-slate-400 mt-1">Please enter your production account criteria or register an operational profile string instance node.</p>
             </div>
-            <div id="signupForm" class="hidden">
-                <input type="text" id="signupName" placeholder="Full Name" class="input-field">
-                <input type="email" id="signupEmail" placeholder="Email" class="input-field">
-                <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" class="input-field">
-                <select id="signupCountry" class="input-field"><option value="">Select Country</option><option>Rwanda</option><option>Kenya</option><option>Uganda</option><option>Tanzania</option><option>Nigeria</option><option>Ghana</option><option>South Africa</option></select>
-                <button id="doSignup" class="btn btn-primary" style="width:100%">Create Account</button>
-                <p id="signupMessage" class="alert hidden"></p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Full Onboarding Name (New Accounts Only)</label>
+                    <input type="text" id="auth-fullname" value="Mugisha Billy Chriss" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Student Corporate Email Context</label>
+                    <input type="email" id="auth-email" value="mugishabillychriss@gmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Secure Password String Matrix</label>
+                    <input type="password" id="auth-pass" value="SecureAdmissionPass123!" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <button onclick="app.authenticateIdentity('signUp')" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-semibold text-xs py-2.5 rounded-xl transition-colors cursor-pointer">
+                        Register Identity
+                    </button>
+                    <button onclick="app.authenticateIdentity('signIn')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-colors cursor-pointer">
+                        Authorize Token
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Dashboard App -->
-    <div id="dashboardApp" class="hidden">
-        <div class="navbar">
-            <div class="logo">AdmissionIQ</div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <span id="userNameDisplay" style="font-weight:500"></span>
-                <span id="planBadge" class="badge" style="background:#3B82F610;">Free</span>
-                <i class="fas fa-moon mode-toggle" id="darkModeToggle"></i>
-                <button id="logoutBtn" class="btn btn-outline" style="padding:0.3rem 0.8rem">Logout</button>
-            </div>
-        </div>
-        <div class="app-container">
-            <div class="sidebar">
-                <div style="margin-bottom:2rem;">
-                    <div class="sidebar-item" data-nav="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</div>
-                    <div class="sidebar-item" data-nav="universities"><i class="fas fa-university"></i> University Explorer</div>
-                    <div class="sidebar-item" data-nav="scholarships"><i class="fas fa-graduation-cap"></i> Scholarship Explorer</div>
-                    <div class="sidebar-item" data-nav="tracker"><i class="fas fa-tasks"></i> Application Tracker</div>
-                    <div class="sidebar-item" data-nav="documents"><i class="fas fa-file-alt"></i> Document Hub</div>
-                    <div class="sidebar-item" data-nav="ai"><i class="fas fa-robot"></i> AI Tools</div>
-                    <div class="sidebar-item" data-nav="profile"><i class="fas fa-user-circle"></i> Profile</div>
-                </div>
-                <div class="card" style="margin-top:auto; text-align:center;">
-                    <i class="fas fa-gem" style="font-size:1.5rem; color:#F59E0B;"></i>
-                    <p style="margin:0.5rem 0; font-size:0.8rem;">Get Premium - Unlimited AI Essays</p>
-                    <button id="upgradeBtn" class="btn btn-primary" style="width:100%;">Upgrade →</button>
-                </div>
-            </div>
-            <div class="main-content" id="mainPanel"><div style="text-align:center; padding:4rem;">Loading...</div></div>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Supabase Configuration
-    const SUPABASE_URL = 'https://skopoptntpkomijboguh.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrb3BvcHRudHBrb21pamJvZ3VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTU3MTIsImV4cCI6MjA5NjMzMTcxMn0.cQ35xNItDjdbtH_Ssi7h1RexeJXIP3itASJlYm8caxQ';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    let currentUser = null, currentProfile = null, activeTab = 'dashboard', chartInstance = null;
-    
-    function showAuth(show) { document.getElementById('authSection').style.display = show ? 'flex' : 'none'; document.getElementById('dashboardApp').classList.toggle('hidden', show); }
-    
-    async function loadProfile() {
-        const { data, error } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
-        if (error && error.code !== 'PGRST116') console.error(error);
-        if (data) { currentProfile = data; document.getElementById('planBadge').innerText = currentProfile.plan?.toUpperCase() || 'FREE'; }
-        else {
-            const { error: insertErr } = await supabase.from('profiles').insert([{ id: currentUser.id, full_name: currentUser.email?.split('@')[0], email: currentUser.email, plan: 'free' }]);
-            if (!insertErr) { const { data: np } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single(); currentProfile = np; }
-        }
-        document.getElementById('userNameDisplay').innerText = currentProfile?.full_name?.split(' ')[0] || 'Student';
-        renderCurrentView();
-    }
-    
-    async function renderCurrentView() {
-        const container = document.getElementById('mainPanel');
-        if (activeTab === 'dashboard') await renderDashboard(container);
-        else if (activeTab === 'universities') await renderUniversities(container);
-        else if (activeTab === 'scholarships') await renderScholarships(container);
-        else if (activeTab === 'tracker') await renderTracker(container);
-        else if (activeTab === 'documents') await renderDocuments(container);
-        else if (activeTab === 'ai') await renderAITools(container);
-        else if (activeTab === 'profile') await renderProfile(container);
-    }
-    
-    async function renderDashboard(container) {
-        const { data: apps } = await supabase.from('applications').select('*').eq('user_id', currentUser.id);
-        const { data: savedScholars } = await supabase.from('saved_scholarships').select('*').eq('user_id', currentUser.id);
-        const { data: savedUnis } = await supabase.from('saved_universities').select('*').eq('user_id', currentUser.id);
-        const upcoming = apps?.filter(a => a.deadline && new Date(a.deadline) > new Date()).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)) || [];
-        const { data: recommendedUnis } = await supabase.from('universities').select('*').limit(4);
-        const { data: recommendedScholars } = await supabase.from('scholarships').select('*').limit(3);
-        const accepted = apps?.filter(a=>a.status==='accepted').length || 0;
-        const submitted = apps?.filter(a=>a.status==='submitted').length || 0;
+    <!-- PRIMARY MAIN INTERACTIVE PLATFORM GRID LAYOUT SYSTEM -->
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-24">
         
-        container.innerHTML = `
-            <h2>Welcome back, ${currentProfile?.full_name?.split(' ')[0] || 'Student'} 👋</h2>
-            <p style="margin-bottom:1.5rem;">Your journey to global education starts here.</p>
-            <div class="grid-3" style="grid-template-columns: repeat(5,1fr);">
-                <div class="card stat-card"><i class="fas fa-file-alt"></i><h3>${apps?.length || 0}</h3><p>Applications</p></div>
-                <div class="card stat-card"><i class="fas fa-star"></i><h3>${savedScholars?.length || 0}</h3><p>Saved Scholarships</p></div>
-                <div class="card stat-card"><i class="fas fa-heart"></i><h3>${savedUnis?.length || 0}</h3><p>Saved Unis</p></div>
-                <div class="card stat-card"><i class="fas fa-check-circle"></i><h3>${accepted}</h3><p>Accepted</p></div>
-                <div class="card stat-card"><i class="fas fa-clock"></i><h3>${submitted}</h3><p>Submitted</p></div>
+        <!-- SIDEBAR CONTAINER DESK (3 Cols Wide) -->
+        <div class="lg:col-span-3 space-y-6">
+            
+            <!-- Structural Profile Panel Configuration Node -->
+            <div class="glass-box rounded-2xl p-4 shadow-xl">
+                <div class="flex items-center gap-3 border-b border-slate-900 pb-3 mb-4">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center font-black text-white" id="profile-initials">ST</div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white leading-tight" id="profile-display-name">Loading Profile...</h3>
+                        <span class="inline-flex text-[9px] font-bold font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider mt-0.5" id="profile-tier-badge">Free Tier</span>
+                    </div>
+                </div>
+                <div class="space-y-2 text-xs">
+                    <button onclick="app.changeDisplayTab('dashboard')" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>📊</span> Control Dashboard</button>
+                    <button onclick="app.changeDisplayTab('uni-explorer')" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>🏛️</span> University Explorer</button>
+                    <button onclick="app.changeDisplayTab('sch-explorer')" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>🎓</span> Scholarship Portals</button>
+                    <button onclick="app.changeDisplayTab('tracker')" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>🚀</span> Pipeline Tracker</button>
+                    <button onclick="app.changeDisplayTab('doc-vault')" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>📁</span> Document Vault</button>
+                    <button onclick="app.changeDisplayTab('ai-lab')" class="tab-btn w-full text-left px-3 py-2 rounded-xl text-slate-400 font-medium hover:text-white transition-all flex items-center gap-2.5"><span>🤖</span> AI Artifact Laboratory</button>
+                </div>
             </div>
-            <div class="card" style="margin-bottom:1.5rem;"><h3>📅 Upcoming Deadlines (${upcoming.length})</h3>${upcoming.slice(0,4).map(a=>`<div class="deadline-item"><span><strong>${a.program}</strong><br><small>${a.deadline ? new Date(a.deadline).toDateString() : 'No date'}</small></span><span class="badge ${new Date(a.deadline) - new Date() < 14*86400000 ? 'badge-pending' : ''}">${Math.ceil((new Date(a.deadline) - new Date())/86400000)} days left</span></div>`).join('') || '<p>No upcoming deadlines. Add applications!</p>'}</div>
-            <div><h3>🎓 Recommended Universities</h3><div class="grid-3">${(recommendedUnis || []).map(u=>`<div class="card"><strong>${u.name}</strong><br>📍 ${u.country}<br>💰 ${u.tuition_display || '$'+u.tuition_usd}<br><button class="btn btn-outline saveUniBtn" data-id="${u.id}">Save</button> <button class="btn btn-primary trackUniBtn" data-name="${u.name}" data-id="${u.id}">Apply</button></div>`).join('')}</div></div>
-            <div><h3>💰 Featured Scholarships</h3><div class="grid-3">${(recommendedScholars || []).map(s=>`<div class="card"><strong>${s.title}</strong><br>🏛 ${s.provider}<br>💰 ${s.amount_display || '$'+s.amount_usd}<br>🗓 ${new Date(s.deadline).toDateString()}<br><button class="btn btn-outline saveScholarBtn" data-id="${s.id}">Save</button></div>`).join('')}</div></div>
-        `;
-        document.querySelectorAll('.saveUniBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_universities').insert([{ user_id: currentUser.id, university_id: parseInt(btn.dataset.id) }]); alert('Saved!'); }));
-        document.querySelectorAll('.trackUniBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('applications').insert([{ user_id: currentUser.id, university_name: btn.dataset.name, program: btn.dataset.name, status: 'researching' }]); alert('Added to tracker'); renderCurrentView(); }));
-        document.querySelectorAll('.saveScholarBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_scholarships').insert([{ user_id: currentUser.id, scholarship_id: parseInt(btn.dataset.id) }]); alert('Saved scholarship!'); }));
-    }
-    
-    async function renderUniversities(container) {
-        let { data: unis } = await supabase.from('universities').select('*').limit(50);
-        container.innerHTML = `<div><div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;"><input type="text" id="uniSearch" placeholder="🔍 Search university..." class="input-field" style="flex:1"><select id="countryFilter" class="input-field" style="width:auto"><option value="">All Countries</option>${[...new Set(unis?.map(u=>u.country))].map(c=>`<option>${c}</option>`).join('')}</select></div><div id="uniList" class="grid-3"></div></div>`;
-        function display(list) { document.getElementById('uniList').innerHTML = list.map(u=>`<div class="card"><h3>${u.name} ${u.flag_emoji || ''}</h3><p>📍 ${u.country} | Rank: ${u.ranking || 'N/A'}</p><p>💰 ${u.tuition_display || '$'+u.tuition_usd}/year</p><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, (u.ranking?5000/u.ranking:50))}%"></div></div><p>📅 Deadline: ${u.deadline ? new Date(u.deadline).toDateString() : 'Rolling'}</p><p><small>${u.requirements?.substring(0,80)}...</small></p><button class="btn btn-primary saveUniBtn2" data-id="${u.id}">Save University</button></div>`).join(''); attachSaveButtons(); }
-        function attachSaveButtons() { document.querySelectorAll('.saveUniBtn2').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_universities').insert([{ user_id: currentUser.id, university_id: parseInt(btn.dataset.id) }]); alert('Saved to your list!'); })); }
-        display(unis);
-        document.getElementById('uniSearch').addEventListener('input', e=> display(unis.filter(u=>u.name.toLowerCase().includes(e.target.value.toLowerCase()))));
-        document.getElementById('countryFilter').addEventListener('change', e=> display(unis.filter(u=>!e.target.value || u.country === e.target.value)));
-    }
-    
-    async function renderScholarships(container) {
-        let { data: schols } = await supabase.from('scholarships').select('*').limit(50);
-        container.innerHTML = `<div><input type="text" id="scholarSearch" placeholder="🔍 Search scholarship..." class="input-field" style="margin-bottom:1rem"><div id="scholarList" class="grid-3"></div></div>`;
-        function display(list) { document.getElementById('scholarList').innerHTML = list.map(s=>`<div class="card"><h3>${s.title}</h3><p>🏛 ${s.provider}</p><p>💰 ${s.amount_display || (s.amount_usd ? '$'+s.amount_usd : 'Full Scholarship')}</p><p>🗓 Deadline: ${new Date(s.deadline).toDateString()}</p><p>🎓 ${s.degree_levels?.join(', ') || 'All levels'}</p><button class="btn btn-primary saveScholarBtn2" data-id="${s.id}">Save</button> <button class="btn btn-outline applyScholar" data-title="${s.title}" data-id="${s.id}">Track Application</button></div>`).join('');
-            document.querySelectorAll('.saveScholarBtn2').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_scholarships').insert([{ user_id: currentUser.id, scholarship_id: parseInt(btn.dataset.id) }]); alert('Saved!'); }));
-            document.querySelectorAll('.applyScholar').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('applications').insert([{ user_id: currentUser.id, program: btn.dataset.title, university_name: btn.dataset.title, status: 'researching' }]); alert('Added to tracker!'); renderCurrentView(); }));
+
+            <!-- Diagnostics Console Logging Feed Panel -->
+            <div class="glass-box rounded-2xl p-4 shadow-xl">
+                <div class="flex justify-between items-center mb-2 border-b border-slate-900 pb-2">
+                    <span class="text-[10px] uppercase tracking-widest font-bold text-slate-400 font-mono">Telemetry Logs</span>
+                    <span id="telemetry-counter" class="text-[9px] bg-slate-950 px-1.5 py-0.5 border border-slate-900 text-indigo-400 font-mono rounded">00</span>
+                </div>
+                <div id="telemetry-output" class="custom-terminal h-36 overflow-y-auto font-mono text-[10px] text-emerald-400 space-y-1.5">
+                    <div class="text-slate-500">[System Bootstrap Stable]</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MODULE MAIN VIEW CONTROLLER DESK (9 Cols Wide) -->
+        <div class="lg:col-span-9">
+            
+            <!-- MODULE 1: MAIN CONTROL DASHBOARD -->
+            <div id="mod-dashboard" class="main-module space-y-6">
+                <div class="glass-box rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-10 text-9xl select-none pointer-events-none translate-x-10 -translate-y-10">🌍</div>
+                    <h1 class="text-2xl font-black text-white tracking-tight" id="dashboard-welcome">Welcome Back, Scholar</h1>
+                    <p class="text-xs text-slate-400 mt-1">Your real-time metrics, system tasks, and recommendation nodes compiled across your Africa ecosystem workspace parameters.</p>
+                </div>
+
+                <!-- Aggregated Counter Statistics Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="glass-box rounded-2xl p-4 shadow-xl border border-slate-900">
+                        <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-500">Active Pipelines</span>
+                        <div class="flex justify-between items-baseline mt-1">
+                            <span class="text-3xl font-black text-white font-mono" id="dash-stat-apps">0</span>
+                            <span class="text-xs text-indigo-400 font-medium">Universities Tracked</span>
+                        </div>
+                    </div>
+                    <div class="glass-box rounded-2xl p-4 shadow-xl border border-slate-900">
+                        <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-500">Saved Directory Nodes</span>
+                        <div class="flex justify-between items-baseline mt-1">
+                            <span class="text-3xl font-black text-violet-400 font-mono" id="dash-stat-saved">0</span>
+                            <span class="text-xs text-slate-400">Bookmarks Total</span>
+                        </div>
+                    </div>
+                    <div class="glass-box rounded-2xl p-4 shadow-xl border border-slate-900">
+                        <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-500">Document Cache Vault</span>
+                        <div class="flex justify-between items-baseline mt-1">
+                            <span class="text-3xl font-black text-emerald-400 font-mono" id="dash-stat-docs">0</span>
+                            <span class="text-xs text-emerald-500 font-medium">Cloud Vault Files</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Recommendations & Matching Row Container -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-box rounded-2xl p-5 shadow-xl">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-900 pb-2">
+                            <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider">🤖 AI Matches: High Probability Universities</h3>
+                            <button onclick="app.executeRuleBasedMatchingEngine()" class="text-[10px] bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded hover:bg-indigo-600 hover:text-white transition-all cursor-pointer">Run Matcher</button>
+                        </div>
+                        <div id="ai-matches-uni-output" class="space-y-3">
+                            <p class="text-xs text-slate-500 italic text-center py-4">Click Run Matcher to compute algorithmic recommendations based on your country parameters.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-box rounded-2xl p-5 shadow-xl">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-900 pb-2">
+                            <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider">🔔 Active Notifications Broadcast</h3>
+                            <button onclick="app.clearNotifications()" class="text-[10px] text-rose-400 hover:underline cursor-pointer">Clear All</button>
+                        </div>
+                        <div id="notifications-output" class="space-y-2 max-h-48 overflow-y-auto">
+                            <p class="text-xs text-slate-500 italic text-center py-4">No critical status notifications captured.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 2: UNIVERSITY EXPLORER DIRECTORY -->
+            <div id="mod-uni-explorer" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-tight">University Data Directory Explorer</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Filter, evaluate structural criteria, and directly append universities to your application tracking board.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="filter-uni-country" onchange="app.pullUniversitiesDirectory()" class="bg-slate-950 text-xs border border-slate-800 rounded-lg px-3 py-2 text-slate-300 focus:outline-none">
+                            <option value="ALL">All Countries</option>
+                            <option value="Rwanda">Rwanda</option>
+                            <option value="Kenya">Kenya</option>
+                            <option value="Ghana">Ghana</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="uni-directory-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Loaded Dynamically -->
+                </div>
+            </div>
+
+            <!-- MODULE 3: SCHOLARSHIP PORTALS DIRECTORY -->
+            <div id="mod-sch-explorer" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-tight">Scholarship Portals Repository</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Track financial conduits, full-ride coverage, and merit awards aligned with African student parameters.</p>
+                    </div>
+                </div>
+
+                <div id="sch-directory-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Loaded Dynamically -->
+                </div>
+            </div>
+
+            <!-- MODULE 4: ACTIVE PIPELINE TRACKER BOARD -->
+            <div id="mod-tracker" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl">
+                    <h2 class="text-lg font-bold text-white tracking-tight">Application Pipeline Matrix Tracker</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Monitor tracking vectors, process states, and historical timeline updates from submission down to admission decisions.</p>
+                </div>
+
+                <div class="glass-box rounded-2xl p-4 overflow-x-auto border border-slate-900 shadow-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-900">
+                                <th class="p-3">Target University</th>
+                                <th class="p-3">Specialization Track</th>
+                                <th class="p-3">Pipeline Status State</th>
+                                <th class="p-3">Deadline Parameters</th>
+                                <th class="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tracker-table-rows" class="divide-y divide-slate-900/60">
+                            <!-- Loaded Dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MODULE 5: DOCUMENT MANAGEMENT STORAGE VAULT -->
+            <div id="mod-doc-vault" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl">
+                    <h2 class="text-lg font-bold text-white tracking-tight">Document Secure Storage Vault</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Upload personal validation artifacts directly to Supabase storage buckets protected by active Row Level Security constraints.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-900">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Artifact Mapping Classification</label>
+                            <select id="doc-upload-type" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300">
+                                <option value="CV">Academic Curriculum Vitae (CV)</option>
+                                <option value="Passport">National Passport Page</option>
+                                <option value="Certificate">National Exam Certificate</option>
+                                <option value="Transcript">Official Academic Transcript</option>
+                                <option value="Recommendation Letter">Recommendation Letter</option>
+                                <option value="English Test">English Test Results</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">File Target Node Payload</label>
+                            <div class="flex gap-2">
+                                <input type="file" id="doc-file-payload" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600/20 file:text-indigo-400 cursor-pointer">
+                                <button onclick="app.executeDocumentVaultUpload()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 rounded-lg transition-colors cursor-pointer">Upload</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-box rounded-2xl p-4 shadow-xl border border-slate-900">
+                    <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-3">Stored File Manifest</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-slate-950 text-slate-400 font-semibold border-b border-slate-900"><th class="p-3">Classification</th><th class="p-3">File Reference Identifier</th><th class="p-3">Uploaded Sync</th><th class="p-3 text-right">Action</th></tr>
+                            </thead>
+                            <tbody id="doc-vault-rows" class="divide-y divide-slate-900/60">
+                                <!-- Loaded Dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 6: AI ARTIFACT LABORATORY (GENERATION SUITE) -->
+            <div id="mod-ai-lab" class="main-module space-y-6 hidden">
+                <div class="glass-box rounded-2xl p-5 shadow-xl">
+                    <h2 class="text-lg font-bold text-white tracking-tight">🤖 AI Artifact Generative Laboratory</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Generate customized academic CV structural frameworks, intent portfolios, and motivation artifacts built using template algorithms.</p>
+                    <span class="inline-flex text-[10px] font-bold font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded mt-3 uppercase tracking-wider">Premium SaaS Access Tier Token Engaged</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Form Control Parameters Frame -->
+                    <div class="md:col-span-1 glass-box rounded-2xl p-4 space-y-4 shadow-xl">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Artifact Node</label>
+                            <select id="ai-artifact-type" onchange="app.switchAILaboratoryLayout()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300">
+                                <option value="CV">Professional Academic CV</option>
+                                <option value="Statement">Personal Statement Portfolio</option>
+                                <option value="Motivation">Scholarship Motivation Letter</option>
+                            </select>
+                        </div>
+
+                        <!-- Dynamic Context Parameters Subfields -->
+                        <div id="ai-input-fields" class="space-y-3">
+                            <!-- Loaded Dynamically via JS Switching Routine -->
+                        </div>
+
+                        <button onclick="app.executeAILaboratoryGeneration()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl shadow-lg transition-colors cursor-pointer">
+                            Generate Artifact Block
+                        </button>
+                    </div>
+
+                    <!-- Output Dynamic Terminal Panel Frame -->
+                    <div class="md:col-span-2 glass-box rounded-2xl p-5 flex flex-col shadow-xl border border-slate-900">
+                        <div class="flex justify-between items-center mb-3 border-b border-slate-900 pb-2">
+                            <h4 class="text-xs font-black uppercase text-indigo-400 tracking-wider">Generated System Model Output</h4>
+                            <button onclick="app.copyAIArtifactToClipboard()" class="text-[10px] text-slate-400 hover:text-white flex items-center gap-1">📋 Copy Clipboard</button>
+                        </div>
+                        <textarea id="ai-output-terminal" readonly class="w-full h-80 bg-slate-950/80 rounded-xl p-4 font-mono text-xs text-slate-300 border border-slate-900 focus:outline-none resize-none leading-relaxed" placeholder="Algorithmic model compiled layout data string will output here..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Historical Generation Log Store Tracker -->
+                <div class="glass-box rounded-2xl p-4 border border-slate-900">
+                    <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-3">Historical Artifact Generation Cache Manifest</h3>
+                    <div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr class="bg-slate-950 text-slate-400 border-b border-slate-900"><th class="p-3">Type</th><th class="p-3">Saved Dynamic Block Snapshot</th><th class="p-3">Compiled Timestamp</th></tr></thead><tbody id="ai-historical-rows" class="divide-y divide-slate-900/60"></tbody></table></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- CENTRAL PLATFORM BUSINESS CLIENT CONTROLLER ARCHITECTURE ENGINE SCRIPT -->
+    <script>
+        class AdmissionIQApplicationCore {
+            constructor() {
+                // Pre-mapped configurations matching user connectivity diagnostics
+                this.config = {
+                    url: "https://skopoptntpkomijboguh.supabase.co",
+                    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrb3BvcHRudHBrb21pamJvZ3VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTU3MTIsImV4cCI6MjA5NjMzMTcxMn0.cQ35xNItDjdbtH_Ssi7h1RexeJXIP3itASJlYm8caxQ"
+                };
+                this.supabase = null;
+                this.logIndex = 0;
+                this.currentUserSessionContext = null;
+
+                this.initializeSupabaseClientContext();
+            }
+
+            // Centralized internal custom telemetry panel pipeline logger
+            telemetryLog(text, type = 'info') {
+                this.logIndex++;
+                document.getElementById('telemetry-counter').innerText = String(this.logIndex).padStart(2, '0');
+                const outputNode = document.getElementById('telemetry-output');
+                const element = document.createElement('div');
+                const stamp = new Date().toISOString().split('T')[1].substring(0, 8);
+                
+                if (type === 'error') element.className = 'text-rose-400 font-bold';
+                else if (type === 'success') element.className = 'text-emerald-400';
+                else element.className = 'text-slate-400';
+                
+                element.innerHTML = `[${stamp}] ${text}`;
+                outputNode.appendChild(element);
+                outputNode.scrollTop = outputNode.scrollHeight;
+                console.log(`[Telemetry Module API Tracker] ${text}`);
+            }
+
+            initializeSupabaseClientContext() {
+                try {
+                    this.supabase = window.supabase.createClient(this.config.url, this.config.key);
+                    this.telemetryLog("AdmissionIQ distributed web system initialization successful.", "success");
+                    this.registerAuthenticationStateMonitor();
+                    this.switchAILaboratoryLayout(); // Prime the initial default AI parameters form structure
+                } catch (exception) {
+                    this.telemetryLog(`Core Boot Failure Exception: ${exception.message}`, "error");
+                }
+            }
+
+            registerAuthenticationStateMonitor() {
+                this.supabase.auth.onAuthStateChange(async (event, session) => {
+                    if (session) {
+                        this.telemetryLog(`Authentication State Vector Event: ${event}`, "success");
+                        this.currentUserSessionContext = session.user;
+                        document.getElementById('gatekeeper-lockout').classList.add('opacity-0', 'pointer-events-none');
+                        
+                        document.getElementById('status-dot').className = "h-2 w-2 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/50";
+                        document.getElementById('status-string').innerText = `Active Session: ${session.user.email}`;
+                        document.getElementById('nav-logout-btn').classList.remove('hidden');
+
+                        await this.loadAndSynchronizeUserProfileData();
+                        this.executeGlobalDataRefreshSequence();
+                    } else {
+                        this.telemetryLog("Authentication token zeroed or session unassigned. Displaying structural security gatekeeper.", "info");
+                        this.currentUserSessionContext = null;
+                        document.getElementById('gatekeeper-lockout').classList.remove('opacity-0', 'pointer-events-none');
+                        document.getElementById('status-dot').className = "h-2 w-2 rounded-full bg-rose-500 shadow-md shadow-rose-500/50";
+                        document.getElementById('status-string').innerText = "Standby Mode (Locked)";
+                        document.getElementById('nav-logout-btn').classList.add('hidden');
+                    }
+                });
+            }
+
+            async authenticateIdentity(actionType) {
+                const fullname = document.getElementById('auth-fullname').value.trim();
+                const email = document.getElementById('auth-email').value.trim();
+                const password = document.getElementById('auth-pass').value.trim();
+
+                if (!email || !password) {
+                    this.telemetryLog("Authentication Blocked: Credentials fields must not be empty.", "error");
+                    alert("Please input proper password/email structural configuration strings.");
+                    return;
+                }
+
+                this.telemetryLog(`Executing credential challenge parameters against route: ${actionType}`);
+                let payloadOutcome;
+                
+                if (actionType === 'signUp') {
+                    payloadOutcome = await this.supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { full_name: fullname, country: "Rwanda", education_level: "High School Graduate", intended_degree: "Bachelors" } }
+                    });
+                } else {
+                    payloadOutcome = await this.supabase.auth.signInWithPassword({ email, password });
+                }
+
+                if (payloadOutcome.error) {
+                    this.telemetryLog(`Identity Challenge Dropped: ${payloadOutcome.error.message}`, "error");
+                    alert(`Authentication Node Code Warning: ${payloadOutcome.error.message}`);
+                } else {
+                    this.telemetryLog(`Identity verified successfully. Token array assigned to context window runtime.`, "success");
+                }
+            }
+
+            async signOutEngine() {
+                this.telemetryLog("Removing verification sessions. Wiping transient cache references.");
+                await this.supabase.auth.signOut();
+            }
+
+            async loadAndSynchronizeUserProfileData() {
+                this.telemetryLog("Retrieving public profile relation tracking row from core schema...");
+                const { data, error } = await this.supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', this.currentUserSessionContext.id)
+                    .single();
+
+                if (error) {
+                    this.telemetryLog(`Profile Sync Mismatch: ${error.message}`, "error");
+                    document.getElementById('profile-display-name').innerText = this.currentUserSessionContext.email.split('@')[0];
+                } else {
+                    document.getElementById('profile-display-name').innerText = data.full_name;
+                    document.getElementById('profile-tier-badge').innerText = `${data.tier} Plan`;
+                    document.getElementById('profile-initials').innerText = data.full_name.substring(0, 2).toUpperCase();
+                    document.getElementById('dashboard-welcome').innerText = `Welcome Back, ${data.full_name} 🌟`;
+                    this.telemetryLog(`User profile matrix mounted completely. Tier: ${data.tier}`, "success");
+                }
+            }
+
+            executeGlobalDataRefreshSequence() {
+                this.pullUniversitiesDirectory();
+                this.pullScholarshipsDirectory();
+                this.pullApplicationsTrackerGrid();
+                this.pullDocumentVaultManifest();
+                this.pullNotificationsFeedManifest();
+                this.pullAIArtifactHistoricalCacheManifest();
+            }
+
+            changeDisplayTab(targetModuleIdentifier) {
+                document.querySelectorAll('.main-module').forEach(node => node.classList.add('hidden'));
+                document.getElementById(`mod-${targetModuleIdentifier}`).classList.remove('hidden');
+                this.telemetryLog(`Interface context view routing shifted to view node: ${targetModuleIdentifier}`);
+            }
+
+            // MODULE: UNIVERSITY ENGINE
+            async pullUniversitiesDirectory() {
+                const searchCountryFilter = document.getElementById('filter-uni-country').value;
+                this.telemetryLog(`Querying structural public.universities manifest vectors...`);
+                
+                let query = this.supabase.from('universities').select('*');
+                if (searchCountryFilter !== 'ALL') {
+                    query = query.eq('country', searchCountryFilter);
+                }
+
+                const { data, error } = await query;
+                if (error) { this.telemetryLog(`Directory Sync Error: ${error.message}`, "error"); return; }
+
+                const outputContainer = document.getElementById('uni-directory-cards');
+                outputContainer.innerHTML = data.map(uni => `
+                    <div class="glass-box rounded-2xl p-5 shadow-lg border border-slate-900/60 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <span class="text-[10px] bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-md font-mono font-bold">Rank #${uni.ranking}</span>
+                                <span class="text-xs text-slate-400 font-medium">📍 ${uni.country}</span>
+                            </div>
+                            <h4 class="text-base font-bold text-white mt-2">${uni.name}</h4>
+                            <p class="text-xs text-slate-400 mt-1.5 line-clamp-3"><strong>Requirements:</strong> ${uni.requirements}</p>
+                            <div class="text-xs text-slate-400 mt-2 pt-2 border-t border-slate-900/40">
+                                <span class="block"><strong>Cost:</strong> $${Number(uni.tuition_usd).toLocaleString()}/Year</span>
+                                <span class="block text-rose-400"><strong>Deadline:</strong> ${uni.deadline}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-2">
+                            <a href="${uni.website}" target="_blank" class="bg-slate-950 hover:bg-slate-900 text-slate-300 text-center font-bold text-[11px] py-2 rounded-lg border border-slate-800 transition-colors">Portal Site</a>
+                            <button onclick="app.initializePipelineRow('${uni.id}', '${uni.deadline}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] py-2 rounded-lg shadow-md transition-colors cursor-pointer">Track Pipeline</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // MODULE: SCHOLARSHIP PORTALS
+            async pullScholarshipsDirectory() {
+                const { data, error } = await this.supabase.from('scholarships').select('*');
+                if (error) return;
+
+                const outputContainer = document.getElementById('sch-directory-cards');
+                outputContainer.innerHTML = data.map(sch => `
+                    <div class="glass-box rounded-2xl p-5 shadow-lg border border-slate-900/60 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <span class="text-[10px] bg-violet-600/10 border border-violet-500/20 text-violet-400 px-2 py-0.5 rounded-md font-mono font-bold">${sch.funding_type}</span>
+                                <span class="text-xs text-slate-400 font-medium">💵 $${Number(sch.amount_usd).toLocaleString()}</span>
+                            </div>
+                            <h4 class="text-base font-bold text-white mt-2">${sch.title}</h4>
+                            <span class="text-xs text-slate-500 block font-medium">Provider: ${sch.provider}</span>
+                            <p class="text-xs text-slate-400 mt-1.5"><strong>Eligibility:</strong> ${sch.eligibility_criteria}</p>
+                            <span class="block text-rose-400 text-xs mt-2"><strong>Deadline:</strong> ${sch.deadline}</span>
+                        </div>
+                        <a href="${sch.link}" target="_blank" class="w-full bg-violet-600 hover:bg-violet-500 text-white text-center font-bold text-[11px] py-2 rounded-lg shadow-md transition-colors block">Apply For Funding Allocation</a>
+                    </div>
+                `).join('');
+            }
+
+            // MODULE: PIPELINE MATRIX TRACKER
+            async initializePipelineRow(universityId, deadline) {
+                this.telemetryLog(`Appending specific institutional reference pointer to your personal processing pipelines table...`);
+                const payload = {
+                    university_id: universityId,
+                    status: "Researching",
+                    program_track: "Computer Science Specialization",
+                    deadline: deadline
+                };
+
+                const { error } = await this.supabase.from('applications').insert([payload]);
+                if (error) {
+                    this.telemetryLog(`Pipeline creation trace dropped: ${error.message}`, "error");
+                    alert("This operational pipeline connection already exists under your account.");
+                } else {
+                    this.telemetryLog("Pipeline linked dynamically.", "success");
+                    this.pullApplicationsTrackerGrid();
+                    this.changeDisplayTab('tracker');
+                }
+            }
+
+            async pullApplicationsTrackerGrid() {
+                const { data, error } = await this.supabase
+                    .from('applications')
+                    .select('*, universities(name)')
+                    .order('updated_at', { ascending: false });
+
+                if (error) return;
+
+                // Sync dashboard statistics card components concurrently
+                document.getElementById('dash-stat-apps').innerText = String(data.length).padStart(2, '0');
+
+                const tableBody = document.getElementById('tracker-table-rows');
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">No operational pipeline rows linked yet. Move over to University Explorer to add records.</td></tr>`;
+                    return;
+                }
+
+                tableBody.innerHTML = data.map(appRow => `
+                    <tr class="hover:bg-slate-900/30 border-b border-slate-900/40 transition-colors">
+                        <td class="p-3 font-bold text-white">${appRow.universities?.name || 'Unknown University'}</td>
+                        <td class="p-3 text-slate-400 font-medium">${appRow.program_track}</td>
+                        <td class="p-3">
+                            <select onchange="app.updatePipelineStatusState('${appRow.id}', this.value)" class="bg-slate-950 text-xs border border-slate-800 rounded px-2 py-1 text-indigo-400 font-medium focus:outline-none focus:border-indigo-500">
+                                <option value="Researching" ${appRow.status === 'Researching' ? 'selected' : ''}>Researching</option>
+                                <option value="Draft" ${appRow.status === 'Draft' ? 'selected' : ''}>Draft</option>
+                                <option value="In Progress" ${appRow.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="Submitted" ${appRow.status === 'Submitted' ? 'selected' : ''}>Submitted</option>
+                                <option value="Interview" ${appRow.status === 'Interview' ? 'selected' : ''}>Interview</option>
+                                <option value="Waitlisted" ${appRow.status === 'Waitlisted' ? 'selected' : ''}>Waitlisted</option>
+                                <option value="Accepted" ${appRow.status === 'Accepted' ? 'selected' : ''}>Accepted</option>
+                                <option value="Rejected" ${appRow.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                            </select>
+                        </td>
+                        <td class="p-3 font-mono text-slate-400">${appRow.deadline}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="app.dropPipelineRow('${appRow.id}')" class="text-rose-400/80 hover:text-rose-400 hover:bg-rose-950/20 px-2 py-1 rounded transition-colors cursor-pointer">Drop</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            async updatePipelineStatusState(applicationId, targetStatus) {
+                const { error } = await this.supabase
+                    .from('applications')
+                    .update({ status: targetStatus, updated_at: new Date().toISOString() })
+                    .eq('id', applicationId);
+
+                if (error) this.telemetryLog(`State update dropped: ${error.message}`, "error");
+                else {
+                    this.telemetryLog(`Pipeline element status updated strictly to state string [${targetStatus}]`, "success");
+                    this.pullApplicationsTrackerGrid();
+                }
+            }
+
+            async dropPipelineRow(applicationId) {
+                if (!confirm("Are you certain you want to purge this pipeline element node trace?")) return;
+                const { error } = await this.supabase.from('applications').delete().eq('id', applicationId);
+                if (error) return;
+                this.telemetryLog("Pipeline row deleted cleanly.");
+                this.pullApplicationsTrackerGrid();
+            }
+
+            // MODULE: SECURE STORAGE DOCUMENT VAULT
+            async executeDocumentVaultUpload() {
+                const typeSelector = document.getElementById('doc-upload-type').value;
+                const fileInput = document.getElementById('doc-file-payload');
+                
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    alert("Please specify a real file configuration payload artifact node first.");
+                    return;
+                }
+
+                const targetsFile = fileInput.files[0];
+                const cleanFileExtension = targetsFile.name.split('.').pop();
+                const randomUniqueStoragePathString = `${this.currentUserSessionContext.id}/${typeSelector.toLowerCase()}_${Date.now()}.${cleanFileExtension}`;
+
+                this.telemetryLog(`Streaming file byte arrays into secure Supabase storage bucket container...`);
+                
+                // Upload raw physical file into your Supabase Storage system bucket ('documents')
+                const { data: storageUploadResult, error: storageError } = await this.supabase.storage
+                    .from('documents')
+                    .upload(randomUniqueStoragePathString, targetsFile, { cacheControl: '3600', upsert: true });
+
+                if (storageError) {
+                    this.telemetryLog(`Storage Bucket Upload Failure: ${storageError.message}`, "error");
+                    this.telemetryLog(`Note: Ensure your Supabase instance contains a bucket named exactly 'documents' with unrestricted RLS policy access definitions active.`, "info");
+                    alert(`Storage Error: ${storageError.message}`);
+                    return;
+                }
+
+                this.telemetryLog("Storage system write operations validated. Registering schema relation row reference index...");
+                
+                // Track metadata records row entry into relational context definitions schema
+                const { error: dbRelationRecordRegisterError } = await this.supabase.from('documents').insert([{
+                    document_type: typeSelector,
+                    file_name: targetsFile.name,
+                    storage_path: randomUniqueStoragePathString
+                }]);
+
+                if (dbRelationRecordRegisterError) this.telemetryLog(`Database relational mapping failed: ${dbRelationRecordRegisterError.message}`, "error");
+                else {
+                    this.telemetryLog("Document catalog trace fully synchronized.", "success");
+                    fileInput.value = '';
+                    this.pullDocumentVaultManifest();
+                }
+            }
+
+            async pullDocumentVaultManifest() {
+                const { data, error } = await this.supabase.from('documents').select('*').order('uploaded_at', { ascending: false });
+                if (error) return;
+
+                document.getElementById('dash-stat-docs').innerText = String(data.length).padStart(2, '0');
+                const listContainer = document.getElementById('doc-vault-rows');
+                
+                if (data.length === 0) {
+                    listContainer.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">Your vault storage workspace contains no file signatures.</td></tr>`;
+                    return;
+                }
+
+                listContainer.innerHTML = data.map(fileRow => `
+                    <tr class="text-xs hover:bg-slate-900/30 border-b border-slate-900/40">
+                        <td class="p-3"><span class="bg-indigo-950 border border-indigo-900 text-indigo-400 font-mono text-[10px] px-2 py-0.5 rounded font-bold">${fileRow.document_type}</span></td>
+                        <td class="p-3 text-slate-300 truncate max-w-xs">${fileRow.file_name}</td>
+                        <td class="p-3 font-mono text-slate-500">${new Date(fileRow.uploaded_at).toLocaleDateString()}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="app.dropVaultDocument('${fileRow.id}', '${fileRow.storage_path}')" class="text-rose-400 hover:bg-rose-950/20 px-2 py-1 rounded transition-colors cursor-pointer">Purge</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            async dropVaultDocument(recordDatabaseId, bucketStoragePath) {
+                if (!confirm("Are you sure you want to drop this asset file component from the cloud vault completely?")) return;
+                
+                // Deletes the record row reference trace from database catalog
+                await this.supabase.from('documents').delete().eq('id', recordDatabaseId);
+                // Clears the target binary asset trace from Supabase cloud vault directory storage
+                await this.supabase.storage.from('documents').remove([bucketStoragePath]);
+                
+                this.telemetryLog("File array purged successfully.");
+                this.pullDocumentVaultManifest();
+            }
+
+            // MODULE: AI RULES-BASED RECOMMENDATION ENGINE
+            async executeRuleBasedMatchingEngine() {
+                this.telemetryLog("Compiling internal rule matrices to sort corresponding high-fit universities parameters...");
+                const { data: uniData } = await this.supabase.from('universities').select('*');
+                const { data: profileData } = await this.supabase.from('profiles').select('country').eq('id', this.currentUserSessionContext.id).single();
+                
+                const matchContainer = document.getElementById('ai-matches-uni-output');
+                if (!uniData || uniData.length === 0) {
+                    matchContainer.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Database system is currently mapping empty arrays.</p>`;
+                    return;
+                }
+
+                // Apply strategic optimization weights logic: Rank matching criteria strings or geographical contexts
+                const processedMatchesHTML = uniData.map(institution => {
+                    let matchingScorePercentage = 75; // Baseline tracking index score
+                    if (institution.country === profileData?.country) matchingScorePercentage += 20; // Structural alignment bonus
+                    if (institution.tuition_usd <= 4000) matchingScorePercentage += 5; // Economic parity weight metric adjustment
+
+                    return `
+                        <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-900 flex justify-between items-center hover:border-slate-800 transition-colors">
+                            <div>
+                                <span class="text-xs font-bold text-white block">${institution.name}</span>
+                                <span class="text-[10px] text-slate-400 block mt-0.5">📍 ${institution.country} • Tuition Estimate: $${Number(institution.tuition_usd).toLocaleString()}/yr</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-emerald-400 font-mono block">${matchingScorePercentage}% Match</span>
+                                <span class="text-[9px] text-slate-500 block">AI Logic Node Verified</span>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                matchContainer.innerHTML = processedMatchesHTML;
+                this.telemetryLog("Algorithmic profile matches generated cleanly across directory fields.", "success");
+            }
+
+            // MODULE: AI ARTIFACT LABORATORY COMPILATION PROCEDURES
+            switchAILaboratoryLayout() {
+                const targetSelectedArtifactType = document.getElementById('ai-artifact-type').value;
+                const container = document.getElementById('ai-input-fields');
+                
+                if (targetSelectedArtifactType === 'CV') {
+                    container.innerHTML = `
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Target Core Skills Set</label><input type="text" id="ai-cv-skills" value="Python Architecture, Data Analysis, SQL Database Modeling" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none"></div>
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Academic Milestones Achievements</label><input type="text" id="ai-cv-achieve" value="Top 1% National Mathematics Olympiad Rwanda, Student Body President" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none"></div>`;
+                } else if (targetSelectedArtifactType === 'Statement') {
+                    container.innerHTML = `
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Intended Degree Specialization</label><input type="text" id="ai-es-course" value="BSc Computer Science & Intelligent Systems" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none"></div>
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Long-term Vision / Tech Career Target</label><input type="text" id="ai-es-goals" value="Architect regional machine learning platforms to streamline distributed agricultural supply lines in East Africa" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none"></div>`;
+                } else {
+                    container.innerHTML = `
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Scholarship Grant Foundation</label><input type="text" id="ai-ml-provider" value="Mastercard Foundation Scholars Program" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none"></div>
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Personal Transformational Background Context</label><input type="text" id="ai-ml-bg" value="First-generation student originating from rural Eastern Province, working as community tech instructor" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none"></div>`;
+                }
+            }
+
+            async executeAILaboratoryGeneration() {
+                const targetSelectedArtifactType = document.getElementById('ai-artifact-type').value;
+                const terminalNode = document.getElementById('ai-output-terminal');
+                this.telemetryLog(`Invoking internal generative blueprint synthesis routine for model output asset type: ${targetSelectedArtifactType}...`);
+                
+                let compiledTextResultBuffer = '';
+                let serializedInputParametersJSON = {};
+
+                if (targetSelectedArtifactType === 'CV') {
+                    const skills = document.getElementById('ai-cv-skills').value;
+                    const achievements = document.getElementById('ai-cv-achieve').value;
+                    serializedInputParametersJSON = { skills, achievements };
+
+                    compiledTextResultBuffer = `====================================================================\nCURRICULUM VITAE COMPILATION ARCHETYPE: ACADEMIC INTENT REFERENCE\n====================================================================\n\nCORE CORE CORE COMPETENCIES MATRIX:\n- ${skills.split(',').join('\n- ')}\n\nDISTINGUISHED HISTORICAL SCHOLASTIC ACCOMPLISHMENTS:\n- ${achievements}\n\nPROFESSIONAL DEVELOPMENT TIMELINE SUMMARY:\n- Lead Developer Sandbox Context - African Innovation Hackathon Group (2025)\n- Active Community Peer Tutoring Advisor Network Controller (2024 - 2026)`;
+                } else if (targetSelectedArtifactType === 'Statement') {
+                    const course = document.getElementById('ai-es-course').value;
+                    const goals = document.getElementById('ai-es-goals').value;
+                    serializedInputParametersJSON = { course, goals };
+
+                    compiledTextResultBuffer = `PERSONAL STATEMENT INTENT DOSSIER FRAMEWORK\nAPPLICATION FOR TRACK: ${course}\n\nMy decision to specialize directly in the domain of ${course} stems directly from a structural desire to solve foundational allocation challenges through engineering. \n\nMy operational life vectors align with my long-term technical objective: to ${goals}. This platform trajectory will provide the foundational skills required to realize this mission within the regional ecosystem framework.`;
+                } else {
+                    const provider = document.getElementById('ai-ml-provider').value;
+                    const background = document.getElementById('ai-ml-bg').value;
+                    serializedInputParametersJSON = { provider, background };
+
+                    compiledTextResultBuffer = `SCHOLARSHIP MOTIVATION PORTFOLIO ARTIFACT\nTARGET SYSTEM: ${provider}\n\nDear Members of the Selection Committee Framework,\n\nI am writing to formally state my candidacy string for funding pathways under the auspices of ${provider}. As an individual originating from a ${background}, I understand first-hand the impact structural educational blockades can inflict upon regional development potential.\n\nSecuring this financial allocation represents the critical catalyst required to translate my engineered prototypes into scalable societal interventions.`;
+                }
+
+                terminalNode.value = compiledTextResultBuffer;
+
+                // Sync generation log tracking directly to relational Supabase public.essays schema
+                const { error } = await this.supabase.from('essays').insert([{
+                    artifact_type: targetSelectedArtifactType === 'CV' ? 'Academic CV' : (targetSelectedArtifactType === 'Statement' ? 'Personal Statement' : 'Motivation Letter'),
+                    input_parameters: serializedInputParametersJSON,
+                    generated_content: compiledTextResultBuffer
+                }]);
+
+                if (error) this.telemetryLog(`Artifact tracking trace failed to write to database: ${error.message}`, "error");
+                else {
+                    this.telemetryLog("AI generated artifact logged to schema repository.", "success");
+                    this.pullAIArtifactHistoricalCacheManifest();
+                }
+            }
+
+            async pullAIArtifactHistoricalCacheManifest() {
+                const { data, error } = await this.supabase.from('essays').select('*').order('created_at', { ascending: false }).limit(5);
+                if (error) return;
+
+                const historicalRowsBodyNode = document.getElementById('ai-historical-rows');
+                if (data.length === 0) {
+                    historicalRowsBodyNode.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-slate-500 italic">No artifact history logged.</td></tr>`;
+                    return;
+                }
+
+                historicalRowsBodyNode.innerHTML = data.map(row => `
+                    <tr class="hover:bg-slate-900/20 text-xs text-slate-400">
+                        <td class="p-3 font-semibold text-white">${row.artifact_type}</td>
+                        <td class="p-3 truncate max-w-xs font-mono text-[10px]">${row.generated_content.substring(0, 60)}...</td>
+                        <td class="p-3 text-slate-500 font-mono">${new Date(row.created_at).toLocaleTimeString()}</td>
+                    </tr>
+                `).join('');
+            }
+
+            copyAIArtifactToClipboard() {
+                const textValue = document.getElementById('ai-output-terminal').value;
+                if (!textValue) return;
+                navigator.clipboard.writeText(textValue);
+                this.telemetryLog("Artifact layout string copied to internal operating system clipboard buffer.");
+                alert("Text string saved directly to clipboard data repository.");
+            }
+
+            // CORE AUXILIARY REFRESH UTILITIES
+            async pullNotificationsFeedManifest() {
+                const { data, error } = await this.supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(4);
+                if (error) return;
+
+                const notificationContainer = document.getElementById('notifications-output');
+                if (!data || data.length === 0) {
+                    notificationContainer.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">No critical status notifications captured.</p>`;
+                    return;
+                }
+
+                notificationContainer.innerHTML = data.map(note => `
+                    <div class="bg-slate-950/40 p-2.5 rounded-lg border border-slate-900 text-xs">
+                        <span class="font-bold text-slate-300 block">${note.title}</span>
+                        <span class="text-slate-400 text-[11px] block mt-0.5">${note.message}</span>
+                    </div>
+                `).join('');
+            }
+
+            async clearNotifications() {
+                await this.supabase.from('notifications').delete().eq('user_id', this.currentUserSessionContext.id);
+                this.pullNotificationsFeedManifest();
+            }
         }
-        display(schols);
-        document.getElementById('scholarSearch').addEventListener('input', e=> display(schols.filter(s=>s.title.toLowerCase().includes(e.target.value.toLowerCase()))));
-    }
-    
-    async function renderTracker(container) {
-        let { data: apps } = await supabase.from('applications').select('*').eq('user_id', currentUser.id);
-        container.innerHTML = `<h2>📋 My Applications</h2><button id="newAppBtn" class="btn btn-primary" style="margin-bottom:1rem"><i class="fas fa-plus"></i> New Application</button><div id="appsList"></div>`;
-        function renderApps() { const div = document.getElementById('appsList'); if(!div) return; div.innerHTML = (apps||[]).map(app=>`<div class="card" style="margin-bottom:1rem"><div style="display:flex; justify-content:space-between; align-items:start"><div><h3>${app.program}</h3><p>${app.university_name || 'University not specified'}</p></div><select class="statusUpdate" data-id="${app.id}" style="padding:0.3rem; border-radius:0.5rem;">${['researching','draft','in_progress','submitted','interview','waitlisted','accepted','rejected'].map(s=>`<option ${app.status===s ? 'selected':''}>${s}</option>`).join('')}</select></div><div>📅 Deadline: ${app.deadline ? new Date(app.deadline).toDateString() : 'Not set'} <button class="btn btn-outline setDeadlineBtn" data-id="${app.id}">Set</button></div><div>📝 Notes: ${app.notes || '—'}</div><div class="progress-bar mt-2"><div class="progress-fill" style="width:${app.status==='submitted'?40:app.status==='accepted'?100:app.status==='researching'?10:20}%"></div></div></div>`).join('');
-            document.querySelectorAll('.statusUpdate').forEach(s=>s.addEventListener('change', async e=>{ await supabase.from('applications').update({ status: s.value }).eq('id', s.dataset.id); renderTracker(container); }));
-            document.querySelectorAll('.setDeadlineBtn').forEach(btn=>btn.addEventListener('click', async ()=>{ let nd = prompt('Deadline (YYYY-MM-DD)'); if(nd) await supabase.from('applications').update({ deadline: nd }).eq('id', btn.dataset.id); renderTracker(container); }));
-        }
-        renderApps();
-        document.getElementById('newAppBtn')?.addEventListener('click', async ()=>{ let prog = prompt('Program/University name'); if(prog) await supabase.from('applications').insert([{ user_id: currentUser.id, program: prog, university_name: prog, status: 'researching' }]); renderTracker(container); });
-    }
-    
-    async function renderDocuments(container) {
-        let { data: docs } = await supabase.from('documents').select('*').eq('user_id', currentUser.id);
-        container.innerHTML = `<h2>📄 Document Vault</h2><div class="card"><input type="file" id="docFile" accept=".pdf,.docx,.jpg,.png" class="input-field"><select id="docType" class="input-field"><option value="cv">CV/Resume</option><option value="transcript">Transcript</option><option value="certificate">Certificate</option><option value="recommendation">Recommendation Letter</option><option value="passport">Passport</option></select><button id="uploadDocBtn" class="btn btn-primary">Upload Document</button></div><div id="docsList" class="grid-3" style="margin-top:1.5rem"></div>`;
-        const listDiv = document.getElementById('docsList');
-        if(listDiv) listDiv.innerHTML = (docs||[]).map(d=>`<div class="card"><i class="fas fa-file-pdf"></i> <strong>${d.doc_name || d.file_name}</strong><br><small>${d.doc_type}</small><br><a href="${d.file_url}" target="_blank" class="btn btn-outline" style="margin-top:0.5rem">View</a> <button class="btn btn-outline deleteDocBtn" data-id="${d.id}">Delete</button></div>`).join('');
-        document.querySelectorAll('.deleteDocBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('documents').delete().eq('id', btn.dataset.id); renderDocuments(container); }));
-        document.getElementById('uploadDocBtn')?.addEventListener('click', async () => {
-            const file = document.getElementById('docFile').files[0]; const docType = document.getElementById('docType').value;
-            if(!file) return alert('Select a file');
-            const filePath = `${currentUser.id}/${Date.now()}_${file.name}`;
-            const { error: upErr } = await supabase.storage.from('documents').upload(filePath, file);
-            if(upErr) { alert('Upload failed: ' + upErr.message); return; }
-            const { data: pubUrl } = supabase.storage.from('documents').getPublicUrl(filePath);
-            await supabase.from('documents').insert([{ user_id: currentUser.id, doc_type: docType, doc_name: file.name, file_name: file.name, file_url: pubUrl.publicUrl, file_size: file.size }]);
-            renderDocuments(container);
-        });
-    }
-    
-    async function renderAITools(container) {
-        container.innerHTML = `<h2>🤖 AI Admission Assistant</h2><div class="grid-3"><div class="card"><h3>📝 AI CV Builder</h3><textarea id="cvInput" placeholder="Paste your education, skills, experience..." rows="6" class="input-field"></textarea><button id="genCV" class="btn btn-primary">Generate Professional CV</button><div id="cvResult" style="margin-top:1rem; background:#f1f5f9; padding:1rem; border-radius:0.75rem;"></div></div><div class="card"><h3>✍️ Personal Statement Generator</h3><input id="psCourse" placeholder="Course/Program" class="input-field"><input id="psUni" placeholder="Target University" class="input-field"><textarea id="psAchievements" placeholder="Your achievements & goals" rows="3" class="input-field"></textarea><button id="genPS" class="btn btn-primary">Generate Statement</button><div id="psResult" style="margin-top:1rem; background:#f1f5f9; padding:1rem; border-radius:0.75rem;"></div></div><div class="card"><h3>🎓 University Matcher</h3><input id="matchBudget" placeholder="Budget (USD/year)" class="input-field"><input id="matchCountry" placeholder="Preferred Country" class="input-field"><select id="matchDegree" class="input-field"><option>Bachelor</option><option>Master</option><option>PhD</option></select><button id="matchBtn" class="btn btn-primary">Find Matches</button><div id="matchResults" class="grid-3" style="margin-top:1rem;"></div></div></div>`;
-        document.getElementById('genCV')?.addEventListener('click', ()=>{ const txt = document.getElementById('cvInput').value; document.getElementById('cvResult').innerHTML = `<pre style="white-space:pre-wrap;"># ACADEMIC CV\n\n${txt || 'Education: Bachelor Candidate, Skills: Leadership, Research, Communication'}\n\n## Awards & Recognition\n- Academic Excellence Award\n- Community Leadership</pre><button onclick="navigator.clipboard.writeText(this.previousElementSibling.innerText)" class="btn btn-outline">Copy CV</button>`; });
-        document.getElementById('genPS')?.addEventListener('click', ()=>{ const course = document.getElementById('psCourse').value, uni = document.getElementById('psUni').value, ach = document.getElementById('psAchievements').value; document.getElementById('psResult').innerHTML = `<p>Dear Admissions Committee,<br><br>My passion for ${course || 'my chosen field'} drives me to pursue studies at ${uni || 'your esteemed university'}. ${ach || 'Throughout my academic journey, I have demonstrated leadership and commitment.'} As a student from Africa, I bring unique perspectives and resilience.<br><br>Sincerely,<br>Applicant</p><button onclick="navigator.clipboard.writeText(this.previousElementSibling.innerText)" class="btn btn-outline">Copy</button>`; });
-        document.getElementById('matchBtn')?.addEventListener('click', async ()=>{ const budget = parseInt(document.getElementById('matchBudget').value) || 15000; const country = document.getElementById('matchCountry').value; const { data: unis } = await supabase.from('universities').select('*'); const matches = unis.filter(u => (u.tuition_usd <= budget+5000) && (!country || u.country.toLowerCase().includes(country.toLowerCase()))).slice(0,6); document.getElementById('matchResults').innerHTML = matches.map(u=>`<div class="card"><strong>${u.name}</strong><br>💰 $${u.tuition_usd}/yr<br>📍 ${u.country}<br><button class="btn btn-primary trackMatch" data-name="${u.name}">Add to Tracker</button></div>`).join(''); document.querySelectorAll('.trackMatch').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('applications').insert([{ user_id: currentUser.id, program: btn.dataset.name, university_name: btn.dataset.name, status: 'researching' }]); alert('Added!'); })); });
-    }
-    
-    async function renderProfile(container) {
-        container.innerHTML = `<h2>👤 My Profile</h2><div class="card"><form id="profileForm"><input id="fullName" value="${currentProfile?.full_name || ''}" placeholder="Full Name" class="input-field"><select id="countrySelect" class="input-field"><option>Rwanda</option><option>Kenya</option><option>Uganda</option><option>Nigeria</option><option>Ghana</option></select><input id="intendedDegree" value="${currentProfile?.intended_degree || ''}" placeholder="Intended Degree (e.g., Computer Science)" class="input-field"><input id="prefCountries" value="${currentProfile?.preferred_countries || ''}" placeholder="Preferred study countries" class="input-field"><button type="submit" class="btn btn-primary">Update Profile</button></form><hr><h3>Subscription</h3><p>Current Plan: <strong>${currentProfile?.plan || 'Free'}</strong></p><p>${currentProfile?.plan === 'free' ? 'Upgrade to Premium for unlimited AI essays & advanced matching' : '✨ Premium Active - Enjoy unlimited AI tools!'}</p></div>`;
-        document.getElementById('profileForm')?.addEventListener('submit', async e=>{ e.preventDefault(); await supabase.from('profiles').update({ full_name: document.getElementById('fullName').value, country: document.getElementById('countrySelect').value, intended_degree: document.getElementById('intendedDegree').value, preferred_countries: document.getElementById('prefCountries').value }).eq('id', currentUser.id); alert('Profile updated!'); loadProfile(); });
-    }
-    
-    // Event handlers & auth
-    document.getElementById('doLogin')?.addEventListener('click', async () => { const email=document.getElementById('loginEmail').value, pwd=document.getElementById('loginPassword').value; const {data,error}=await supabase.auth.signInWithPassword({email,password:pwd}); if(error){document.getElementById('loginMessage').innerText=error.message;document.getElementById('loginMessage').classList.remove('hidden');}else{currentUser=data.user;showAuth(false);await loadProfile();}});
-    document.getElementById('doSignup')?.addEventListener('click', async () => { const email=document.getElementById('signupEmail').value, pwd=document.getElementById('signupPassword').value, name=document.getElementById('signupName').value; const {data,error}=await supabase.auth.signUp({email,password:pwd,options:{data:{full_name:name}}}); if(error){document.getElementById('signupMessage').innerText=error.message;document.getElementById('signupMessage').classList.remove('hidden');}else{alert('Account created! Please check email for confirmation (or login if auto-confirmed).');}});
-    document.getElementById('showLoginBtn')?.addEventListener('click',()=>{document.getElementById('loginForm').classList.remove('hidden');document.getElementById('signupForm').classList.add('hidden');});
-    document.getElementById('showSignupBtn')?.addEventListener('click',()=>{document.getElementById('signupForm').classList.remove('hidden');document.getElementById('loginForm').classList.add('hidden');});
-    document.getElementById('logoutBtn')?.addEventListener('click', async()=>{await supabase.auth.signOut();currentUser=null;showAuth(true);});
-    document.getElementById('upgradeBtn')?.addEventListener('click', ()=>{ alert('Premium upgrade coming soon! $4.99/month — unlimited AI essays & matching.'); });
-    document.querySelectorAll('[data-nav]').forEach(el=>{el.addEventListener('click',()=>{activeTab=el.getAttribute('data-nav');renderCurrentView();});});
-    document.getElementById('darkModeToggle')?.addEventListener('click',()=>document.body.classList.toggle('dark'));
-    async function checkSession(){ const {data:{session}}=await supabase.auth.getSession(); if(session){currentUser=session.user;showAuth(false);await loadProfile();}else{showAuth(true);} }
-    checkSession();
-</script>
+
+        // Initialize Global Core Application Context Workspace Runner
+        const app = new AdmissionIQApplicationCore();
+    </script>
 </body>
 </html>
