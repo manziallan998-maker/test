@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AdmissionIQ | AI University Application Assistant for African Students</title>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts & Simple Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        /* Dark mode styles */
+        body.dark {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        body.dark .card, body.dark .modal-content, body.dark .navbar, body.dark .sidebar {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        body.dark input, body.dark textarea, body.dark select {
+            background: #334155;
+            color: #f1f5f9;
+            border-color: #475569;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.2s;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3B82F6, #10B981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.1s;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3B82F6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .deadline-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .mode-toggle {
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+        }
+
+        .auth-form {
+            max-width: 400px;
+            margin: 4rem auto;
+        }
+        .hidden { display: none; }
+        .alert { padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; }
+        .alert-error { background: #fee2e2; color: #b91c1c; }
+        .alert-success { background: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- Auth Section (shown when not logged in) -->
+    <div id="authSection" class="main-content" style="margin-left:0; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+        <div class="auth-form card">
+            <h2 style="margin-bottom:1rem">Welcome to AdmissionIQ</h2>
+            <p style="margin-bottom:1.5rem">AI-powered admissions for African students</p>
+            <div id="authTabs">
+                <button id="showLoginBtn" class="btn btn-primary" style="margin-right:0.5rem">Login</button>
+                <button id="showSignupBtn" class="btn btn-outline">Sign Up</button>
+            </div>
+            <div id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Email" class="input-field" style="width:100%; padding:0.75rem; margin:0.75rem 0; border-radius:0.5rem; border:1px solid #cbd5e1;">
+                <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:0.75rem; margin:0.75rem 0; border-radius:0.5rem; border:1px solid #cbd5e1;">
+                <button id="doLogin" class="btn btn-primary" style="width:100%">Login</button>
+                <p id="loginMessage" class="alert hidden"></p>
+            </div>
+            <div id="signupForm" class="hidden">
+                <input type="text" id="signupName" placeholder="Full Name" style="width:100%; padding:0.75rem; margin:0.75rem 0; border-radius:0.5rem; border:1px solid #cbd5e1;">
+                <input type="email" id="signupEmail" placeholder="Email" style="width:100%; padding:0.75rem; margin:0.75rem 0; border-radius:0.5rem; border:1px solid #cbd5e1;">
+                <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" style="width:100%; padding:0.75rem; margin:0.75rem 0; border-radius:0.5rem; border:1px solid #cbd5e1;">
+                <button id="doSignup" class="btn btn-primary" style="width:100%">Create Account</button>
+                <p id="signupMessage" class="alert hidden"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (logged in) -->
+    <div id="dashboardApp" class="hidden">
+        <div class="navbar">
+            <div class="logo">AdmissionIQ</div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <span id="userNameDisplay" style="font-weight:500"></span>
+                <i class="fas fa-moon mode-toggle" id="darkModeToggle"></i>
+                <button id="logoutBtn" class="btn btn-outline" style="padding:0.3rem 0.8rem">Logout</button>
+            </div>
+        </div>
+        <div class="app-container">
+            <div class="sidebar">
+                <ul style="list-style:none; margin-top:2rem">
+                    <li style="margin-bottom:1.5rem"><i class="fas fa-tachometer-alt"></i> <strong data-nav="dashboard">Dashboard</strong></li>
+                    <li style="margin-bottom:1.5rem"><i class="fas fa-university"></i> <strong data-nav="universities">University Explorer</strong></li>
+                    <li style="margin-bottom:1.5rem"><i class="fas fa-graduation-cap"></i> <strong data-nav="scholarships">Scholarship Explorer</strong></li>
+                    <li style="margin-bottom:1.5rem"><i class="fas fa-tasks"></i> <strong data-nav="tracker">Application Tracker</strong></li>
+                    <li style="margin-bottom:1.5rem"><i class="fas fa-file-alt"></i> <strong data-nav="documents">Documents</strong></li>
+                    <li style="margin-bottom:1.5rem"><i class="fas fa-robot"></i> <strong data-nav="ai">AI Tools (CV/Matcher)</strong></li>
+                </ul>
+            </div>
+            <div class="main-content" id="mainPanel">
+                <!-- dynamic content loaded here -->
+                <div id="dynamicView">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- SUPABASE CONFIG (anon key provided for testing) ----------
+    const SUPABASE_URL = 'https://skopoptntpk omij boguh.supabase.co'.replace(/\s/g, ''); // fixed from anonkey issuer
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrb3BvcHRudHBrb21pamJvZ3VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTU3MTIsImV4cCI6MjA5NjMzMTcxMn0.cQ35xNItDjdbtH_Ssi7h1RexeJXIP3itASJlYm8caxQ';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Global state
+    let currentUser = null;
+    let currentProfile = null;
+    let activeTab = 'dashboard';
+    
+    // Helper: show/hide sections
+    function showAuth(show) {
+        document.getElementById('authSection').style.display = show ? 'flex' : 'none';
+        document.getElementById('dashboardApp').classList.toggle('hidden', show);
+    }
+    
+    // load user profile data
+    async function loadProfile() {
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+        if (error && error.code !== 'PGRST116') console.error(error);
+        if (data) currentProfile = data;
+        else {
+            // create profile if missing
+            const { error: insertErr } = await supabase.from('profiles').insert([{ id: currentUser.id, full_name: currentUser.email?.split('@')[0] || 'Student', subscription_tier: 'free', ai_credits_remaining: 3 }]);
+            if (!insertErr) { const { data: newProf } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single(); currentProfile = newProf; }
+        }
+        if (currentProfile) document.getElementById('userNameDisplay').innerText = currentProfile.full_name || 'Student';
+        renderCurrentView();
+    }
+    
+    // generic render dispatcher
+    function renderCurrentView() {
+        const container = document.getElementById('dynamicView');
+        if (activeTab === 'dashboard') renderDashboard(container);
+        else if (activeTab === 'universities') renderUniversities(container);
+        else if (activeTab === 'scholarships') renderScholarships(container);
+        else if (activeTab === 'tracker') renderTracker(container);
+        else if (activeTab === 'documents') renderDocuments(container);
+        else if (activeTab === 'ai') renderAITools(container);
+    }
+    
+    // DASHBOARD with stats, deadlines & recommendations
+    async function renderDashboard(container) {
+        const { data: apps } = await supabase.from('applications').select('*').eq('user_id', currentUser.id);
+        const { data: savedScholars } = await supabase.from('saved_scholarships').select('scholarship_id').eq('user_id', currentUser.id);
+        const upcoming = apps?.filter(a => a.deadline && new Date(a.deadline) > new Date()).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)) || [];
+        const { data: recommendedUnis } = await supabase.from('universities').select('*').limit(3);
+        const { data: recommendedScholars } = await supabase.from('scholarships').select('*').limit(2);
+        
+        container.innerHTML = `
+            <h2>Welcome back, ${currentProfile?.full_name?.split(' ')[0] || 'Student'} 👋</h2>
+            <div class="grid-3" style="grid-template-columns: repeat(4,1fr); margin-bottom:2rem">
+                <div class="card stat-card"><i class="fas fa-file-alt"></i> <h3>${apps?.length || 0}</h3><p>Applications</p></div>
+                <div class="card stat-card"><i class="fas fa-star"></i> <h3>${savedScholars?.length || 0}</h3><p>Saved Scholarships</p></div>
+                <div class="card stat-card"><i class="fas fa-calendar-alt"></i> <h3>${upcoming.length}</h3><p>Upcoming deadlines</p></div>
+                <div class="card stat-card"><i class="fas fa-check-circle"></i> <h3>${apps?.filter(a=>a.status==='accepted').length || 0}</h3><p>Accepted</p></div>
+            </div>
+            <div class="card" style="margin-bottom:1.5rem"><h3>📅 Upcoming Deadlines</h3>${upcoming.slice(0,3).map(a=>`<div class="deadline-item">${a.program_name || 'Application'} - Due ${new Date(a.deadline).toDateString()}</div>`).join('') || '<p>No upcoming deadlines.</p>'}</div>
+            <div><h3>🎓 Recommended Universities</h3><div class="grid-3">${(recommendedUnis || []).map(u=>`<div class="card"><strong>${u.name}</strong><br>📍 ${u.country}<br>💰 $${u.tuition_min_usd || '?'}/year<br><button class="btn btn-outline saveUniBtn" data-id="${u.id}">Save</button></div>`).join('')}</div></div>
+            <div><h3>💰 Recommended Scholarships</h3><div class="grid-3">${(recommendedScholars || []).map(s=>`<div class="card"><strong>${s.title}</strong><br>🏛 ${s.provider}<br>💰 $${s.amount_usd || 'varies'}<br>🗓 Deadline: ${new Date(s.deadline).toDateString()}<br><button class="btn btn-outline saveScholarshipBtn" data-id="${s.id}">Save</button></div>`).join('')}</div></div>
+        `;
+        document.querySelectorAll('.saveUniBtn').forEach(btn => btn.addEventListener('click', async (e) => {
+            const uid = btn.getAttribute('data-id');
+            await supabase.from('saved_universities').insert([{ user_id: currentUser.id, university_id: uid }]);
+            alert('Saved university');
+        }));
+        document.querySelectorAll('.saveScholarshipBtn').forEach(btn => btn.addEventListener('click', async (e) => {
+            const sid = btn.getAttribute('data-id');
+            await supabase.from('saved_scholarships').insert([{ user_id: currentUser.id, scholarship_id: sid }]);
+            alert('Saved scholarship');
+        }));
+    }
+    
+    // University explorer
+    async function renderUniversities(container) {
+        let { data: unis } = await supabase.from('universities').select('*').limit(30);
+        container.innerHTML = `<div><input type="text" id="uniSearch" placeholder="Search university..." class="input-field" style="padding:0.75rem; width:100%; margin-bottom:1rem"><div id="uniList" class="grid-3"></div></div>`;
+        function display(list) {
+            document.getElementById('uniList').innerHTML = list.map(u=>`<div class="card"><h3>${u.name}</h3><p>${u.country} | Rank: ${u.world_rank || 'N/A'}</p><p>💰 $${u.tuition_min_usd}-${u.tuition_max_usd}</p><p>📅 Deadline: ${u.deadline_dates?.fall || 'Rolling'}</p><button class="btn btn-primary saveUniBtn2" data-id="${u.id}">Save</button> <button class="btn btn-outline trackBtn" data-name="${u.name}" data-id="${u.id}">Add to tracker</button></div>`).join('');
+            document.querySelectorAll('.saveUniBtn2').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_universities').insert([{ user_id: currentUser.id, university_id: btn.dataset.id }]); alert('Saved'); }));
+            document.querySelectorAll('.trackBtn').forEach(btn=>btn.addEventListener('click', async e=>{ const name=btn.dataset.name; await supabase.from('applications').insert([{ user_id: currentUser.id, university_id: btn.dataset.id, program_name: name, status: 'researching' }]); alert('Added to tracker'); renderCurrentView(); }));
+        }
+        display(unis);
+        document.getElementById('uniSearch').addEventListener('input', (e) => {
+            const filtered = unis.filter(u=>u.name.toLowerCase().includes(e.target.value.toLowerCase()));
+            display(filtered);
+        });
+    }
+    
+    // Scholarship explorer
+    async function renderScholarships(container) {
+        let { data: scholarships } = await supabase.from('scholarships').select('*').limit(30);
+        container.innerHTML = `<div><input type="text" id="scholarSearch" placeholder="Search scholarship..." class="input-field" style="padding:0.75rem; width:100%; margin-bottom:1rem"><div id="scholarList" class="grid-3"></div></div>`;
+        function display(list) {
+            document.getElementById('scholarList').innerHTML = list.map(s=>`<div class="card"><h3>${s.title}</h3><p>${s.provider}</p><p>💰 ${s.amount_usd ? '$'+s.amount_usd : 'Full/Partial'}</p><p>🗓 Deadline: ${new Date(s.deadline).toDateString()}</p><button class="btn btn-primary saveScholarBtn" data-id="${s.id}">Save</button> <button class="btn btn-outline trackScholarAppBtn" data-title="${s.title}" data-id="${s.id}">Apply Tracker</button></div>`).join('');
+            document.querySelectorAll('.saveScholarBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_scholarships').insert([{ user_id: currentUser.id, scholarship_id: btn.dataset.id }]); alert('Saved'); }));
+            document.querySelectorAll('.trackScholarAppBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('applications').insert([{ user_id: currentUser.id, scholarship_id: btn.dataset.id, program_name: btn.dataset.title, status: 'researching' }]); alert('Application added'); renderCurrentView(); }));
+        }
+        display(scholarships);
+        document.getElementById('scholarSearch').addEventListener('input', (e) => display(scholarships.filter(s=>s.title.toLowerCase().includes(e.target.value.toLowerCase()))));
+    }
+    
+    // Application Tracker
+    async function renderTracker(container) {
+        let { data: apps } = await supabase.from('applications').select('*, universities(name)').eq('user_id', currentUser.id);
+        container.innerHTML = `<h2>Your Applications</h2><button id="newAppBtn" class="btn btn-primary" style="margin-bottom:1rem">+ New Application</button><div id="appsList"></div>`;
+        function renderApps() {
+            const appsDiv = document.getElementById('appsList');
+            if(!appsDiv) return;
+            appsDiv.innerHTML = (apps||[]).map(app=>`<div class="card" style="margin-bottom:1rem"><strong>${app.program_name || (app.universities?.name || 'Scholarship/Uni')}</strong> <span style="float:right">Status: <select class="statusUpdate" data-id="${app.id}">${['researching','draft','in_progress','submitted','interview','waitlisted','accepted','rejected'].map(s=>`<option ${app.status===s ? 'selected':''}>${s}</option>`).join('')}</select></span><div>Deadline: ${app.deadline ? new Date(app.deadline).toDateString() : 'Not set'} <button class="btn btn-outline setDeadlineBtn" data-id="${app.id}">Set Deadline</button></div><div>Notes: ${app.notes || '—'}</div></div>`).join('');
+            document.querySelectorAll('.statusUpdate').forEach(select=>select.addEventListener('change', async e=>{ await supabase.from('applications').update({ status: select.value }).eq('id', select.dataset.id); renderTracker(container); }));
+            document.querySelectorAll('.setDeadlineBtn').forEach(btn=>btn.addEventListener('click', async ()=>{ let newDate = prompt('Enter deadline (YYYY-MM-DD)'); if(newDate) await supabase.from('applications').update({ deadline: newDate }).eq('id', btn.dataset.id); renderTracker(container); }));
+        }
+        renderApps();
+        document.getElementById('newAppBtn')?.addEventListener('click', async ()=>{
+            const prog = prompt('Program/University name');
+            if(prog) await supabase.from('applications').insert([{ user_id: currentUser.id, program_name: prog, status: 'researching' }]);
+            renderTracker(container);
+        });
+    }
+    
+    // Document management (supabase storage simulation)
+    async function renderDocuments(container) {
+        let { data: docs } = await supabase.from('documents').select('*').eq('user_id', currentUser.id);
+        container.innerHTML = `<h2>📄 Document Hub</h2><input type="file" id="fileUpload" accept=".pdf,.docx,.jpg,.png"/><button id="uploadDocBtn" class="btn btn-primary mt-2">Upload</button><div id="docsList" class="grid-3" style="margin-top:1rem"></div>`;
+        function listDocs() { 
+            const listDiv = document.getElementById('docsList');
+            if(listDiv) listDiv.innerHTML = (docs||[]).map(d=>`<div class="card"><i class="fas fa-file-pdf"></i> ${d.original_name}<br><small>${d.document_type}</small><br><button class="btn btn-outline deleteDoc" data-id="${d.id}">Delete</button></div>`).join('');
+            document.querySelectorAll('.deleteDoc').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('documents').delete().eq('id', btn.dataset.id); renderDocuments(container); }));
+        }
+        listDocs();
+        document.getElementById('uploadDocBtn')?.addEventListener('click', async () => {
+            const file = document.getElementById('fileUpload').files[0];
+            if(!file) return alert('Select a file');
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const filePath = `${currentUser.id}/${fileName}`;
+            const { error: uploadErr } = await supabase.storage.from('documents').upload(filePath, file);
+            if(uploadErr) { alert('Upload error: '+uploadErr.message); return; }
+            await supabase.from('documents').insert([{ user_id: currentUser.id, document_type: 'other', original_name: file.name, storage_path: filePath }]);
+            renderDocuments(container);
+        });
+    }
+    
+    // AI Tools: CV Builder (template) & University Matcher (rule based)
+    async function renderAITools(container) {
+        const credits = currentProfile?.ai_credits_remaining || 0;
+        container.innerHTML = `<div><h2>🤖 AI Admission Tools</h2><p>Credits remaining: ${credits} (Free tier)</p>
+        <div class="card"><h3>📝 AI CV Builder</h3><textarea id="cvInput" placeholder="Paste your education, skills, experience..." rows="4" style="width:100%; margin:0.5rem 0"></textarea><button id="generateCVBtn" class="btn btn-primary">Generate Academic CV</button><div id="cvOutput" style="margin-top:1rem; background:#f1f5f9; padding:1rem; border-radius:0.5rem"></div></div>
+        <div class="card"><h3>🎓 Smart University Matching (Rules Engine)</h3><label>Budget (USD/year):</label><input type="number" id="matchBudget" placeholder="e.g., 10000"><label>Preferred Country:</label><input id="matchCountry" placeholder="e.g., Canada, Germany"><button id="matchUniBtn" class="btn btn-primary">Match Me</button><div id="matchResults" class="grid-3" style="margin-top:1rem"></div></div></div>`;
+        
+        document.getElementById('generateCVBtn')?.addEventListener('click', async () => {
+            if(credits <= 0 && currentProfile?.subscription_tier !== 'premium') { alert('You need premium or AI credits. Contact support.'); return; }
+            const rawText = document.getElementById('cvInput').value;
+            const fakeCV = `# ACADEMIC CV\n\n${rawText || 'Education: University Candidate, Skills: Leadership, Research'}\n\n## Summary\nHighly motivated African student passionate about global education.\n## Achievements\n- Scholarship nominee\n- Community leader`;
+            document.getElementById('cvOutput').innerHTML = `<pre style="white-space:pre-wrap">${fakeCV}</pre><button id="copyCV" class="btn btn-outline mt-2">Copy CV</button>`;
+            document.getElementById('copyCV')?.addEventListener('click', ()=>navigator.clipboard.writeText(fakeCV));
+            // deduct credit simulation
+            if(currentProfile?.subscription_tier !== 'premium') {
+                const newCredits = Math.max(0, credits-1);
+                await supabase.from('profiles').update({ ai_credits_remaining: newCredits }).eq('id', currentUser.id);
+                if(currentProfile) currentProfile.ai_credits_remaining = newCredits;
+            }
+        });
+        
+        document.getElementById('matchUniBtn')?.addEventListener('click', async () => {
+            const budget = parseInt(document.getElementById('matchBudget').value) || 15000;
+            const countryPref = document.getElementById('matchCountry').value.toLowerCase();
+            let { data: unis } = await supabase.from('universities').select('*');
+            let matches = unis.filter(u => (u.tuition_min_usd <= budget+5000) && (countryPref === '' || u.country.toLowerCase().includes(countryPref))).slice(0,6);
+            const resultsDiv = document.getElementById('matchResults');
+            if(matches.length ===0) resultsDiv.innerHTML = '<p>No matching universities with current filters. Adjust budget.</p>';
+            else resultsDiv.innerHTML = matches.map(u=>`<div class="card"><strong>${u.name}</strong><br>📍 ${u.country}<br>💰 ~$${u.tuition_min_usd}/year<br>🎓 Requirements: GPA 3.0+<br><button class="btn btn-primary trackMatchBtn" data-name="${u.name}" data-id="${u.id}">Add to Tracker</button></div>`).join('');
+            document.querySelectorAll('.trackMatchBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('applications').insert([{ user_id: currentUser.id, university_id: btn.dataset.id, program_name: btn.dataset.name, status: 'researching' }]); alert('Application added to tracker'); }));
+        });
+    }
+    
+    // Authentication event handlers
+    document.getElementById('doLogin')?.addEventListener('click', async () => {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if(error) { document.getElementById('loginMessage').innerText = error.message; document.getElementById('loginMessage').classList.remove('hidden'); return; }
+        currentUser = data.user;
+        showAuth(false);
+        await loadProfile();
+        renderCurrentView();
+    });
+    document.getElementById('doSignup')?.addEventListener('click', async () => {
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
+        const fullName = document.getElementById('signupName').value;
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+        if(error) { document.getElementById('signupMessage').innerText = error.message; document.getElementById('signupMessage').classList.remove('hidden'); return; }
+        alert('Check email for confirmation! (For demo, login may work without confirmation if email configured)');
+        if(data.user) { currentUser = data.user; showAuth(false); await loadProfile(); }
+    });
+    document.getElementById('showLoginBtn')?.addEventListener('click', ()=>{ document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('signupForm').classList.add('hidden'); });
+    document.getElementById('showSignupBtn')?.addEventListener('click', ()=>{ document.getElementById('signupForm').classList.remove('hidden'); document.getElementById('loginForm').classList.add('hidden'); });
+    document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{ await supabase.auth.signOut(); currentUser=null; showAuth(true); });
+    
+    // Sidebar navigation
+    document.querySelectorAll('[data-nav]').forEach(el => {
+        el.addEventListener('click', (e) => { activeTab = e.target.closest('[data-nav]')?.getAttribute('data-nav'); renderCurrentView(); });
+    });
+    // dark mode
+    document.getElementById('darkModeToggle')?.addEventListener('click', () => document.body.classList.toggle('dark'));
+    
+    // session check
+    async function checkSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if(session) { currentUser = session.user; showAuth(false); await loadProfile(); renderCurrentView(); }
+        else { showAuth(true); }
+    }
+    checkSession();
+</script>
+</body>
+</html>
