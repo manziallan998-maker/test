@@ -1,1 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AdmissionIQ | AI University Application Assistant for African Students</title>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark { background: #0f172a; color: #e2e8f0; }
+        body.dark .card, body.dark .modal-content, body.dark .navbar, body.dark .sidebar, body.dark .auth-form,
+        body.dark input, body.dark textarea, body.dark select { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+        body.dark .btn-outline { border-color: #475569; color: #cbd5e1; }
+        
+        /* Layout */
+        .app-container { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 280px; background: white; border-right: 1px solid #e2e8f0;
+            padding: 2rem 1rem; position: fixed; height: 100vh; overflow-y: auto;
+        }
+        .main-content { flex: 1; margin-left: 280px; padding: 2rem; }
+        .navbar {
+            background: white; border-bottom: 1px solid #e2e8f0; padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
+        }
+        .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #3B82F6, #10B981, #8B5CF6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .card { background: white; border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .btn { padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-size: 0.9rem; }
+        .btn-primary { background: linear-gradient(135deg, #3B82F6, #2563eb); color: white; }
+        .btn-primary:hover { transform: scale(1.02); opacity: 0.9; }
+        .btn-outline { background: transparent; border: 1px solid #cbd5e1; }
+        .btn-success { background: #10B981; color: white; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .stat-card { text-align: center; padding: 1.5rem; }
+        .stat-card i { font-size: 2rem; margin-bottom: 0.5rem; color: #3B82F6; }
+        .deadline-item { padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .mode-toggle { cursor: pointer; font-size: 1.3rem; }
+        .auth-form { max-width: 450px; margin: 4rem auto; }
+        .hidden { display: none; }
+        .alert { padding: 0.75rem; border-radius: 0.75rem; margin-bottom: 1rem; }
+        .alert-error { background: #fee2e2; color: #b91c1c; }
+        .alert-success { background: #dcfce7; color: #166534; }
+        .input-field { width: 100%; padding: 0.75rem; border-radius: 0.75rem; border: 1px solid #cbd5e1; background: white; margin-bottom: 1rem; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 600; }
+        .badge-accepted { background: #10B98120; color: #10B981; }
+        .badge-pending { background: #F59E0B20; color: #F59E0B; }
+        .sidebar-item { padding: 0.75rem 1rem; margin: 0.25rem 0; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-item:hover, .sidebar-item.active { background: #3B82F610; color: #3B82F6; }
+        @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+        .progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin: 0.5rem 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #10B981); border-radius: 3px; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- Auth Section -->
+    <div id="authSection" class="main-content" style="margin-left:0; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+        <div class="auth-form card">
+            <div style="text-align:center; margin-bottom:2rem;">
+                <div class="logo" style="font-size:2.5rem;">AdmissionIQ</div>
+                <p style="margin-top:0.5rem;">AI-Powered Admissions for African Students</p>
+            </div>
+            <div id="authTabs" style="display:flex; gap:1rem; margin-bottom:1.5rem;">
+                <button id="showLoginBtn" class="btn btn-primary" style="flex:1">Login</button>
+                <button id="showSignupBtn" class="btn btn-outline" style="flex:1">Sign Up</button>
+            </div>
+            <div id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Email address" class="input-field">
+                <input type="password" id="loginPassword" placeholder="Password" class="input-field">
+                <button id="doLogin" class="btn btn-primary" style="width:100%">Login</button>
+                <p id="loginMessage" class="alert hidden"></p>
+            </div>
+            <div id="signupForm" class="hidden">
+                <input type="text" id="signupName" placeholder="Full Name" class="input-field">
+                <input type="email" id="signupEmail" placeholder="Email" class="input-field">
+                <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" class="input-field">
+                <select id="signupCountry" class="input-field"><option value="">Select Country</option><option>Rwanda</option><option>Kenya</option><option>Uganda</option><option>Tanzania</option><option>Nigeria</option><option>Ghana</option><option>South Africa</option></select>
+                <button id="doSignup" class="btn btn-primary" style="width:100%">Create Account</button>
+                <p id="signupMessage" class="alert hidden"></p>
+            </div>
+        </div>
+    </div>
 
+    <!-- Dashboard App -->
+    <div id="dashboardApp" class="hidden">
+        <div class="navbar">
+            <div class="logo">AdmissionIQ</div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <span id="userNameDisplay" style="font-weight:500"></span>
+                <span id="planBadge" class="badge" style="background:#3B82F610;">Free</span>
+                <i class="fas fa-moon mode-toggle" id="darkModeToggle"></i>
+                <button id="logoutBtn" class="btn btn-outline" style="padding:0.3rem 0.8rem">Logout</button>
+            </div>
+        </div>
+        <div class="app-container">
+            <div class="sidebar">
+                <div style="margin-bottom:2rem;">
+                    <div class="sidebar-item" data-nav="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</div>
+                    <div class="sidebar-item" data-nav="universities"><i class="fas fa-university"></i> University Explorer</div>
+                    <div class="sidebar-item" data-nav="scholarships"><i class="fas fa-graduation-cap"></i> Scholarship Explorer</div>
+                    <div class="sidebar-item" data-nav="tracker"><i class="fas fa-tasks"></i> Application Tracker</div>
+                    <div class="sidebar-item" data-nav="documents"><i class="fas fa-file-alt"></i> Document Hub</div>
+                    <div class="sidebar-item" data-nav="ai"><i class="fas fa-robot"></i> AI Tools</div>
+                    <div class="sidebar-item" data-nav="profile"><i class="fas fa-user-circle"></i> Profile</div>
+                </div>
+                <div class="card" style="margin-top:auto; text-align:center;">
+                    <i class="fas fa-gem" style="font-size:1.5rem; color:#F59E0B;"></i>
+                    <p style="margin:0.5rem 0; font-size:0.8rem;">Get Premium - Unlimited AI Essays</p>
+                    <button id="upgradeBtn" class="btn btn-primary" style="width:100%;">Upgrade →</button>
+                </div>
+            </div>
+            <div class="main-content" id="mainPanel"><div style="text-align:center; padding:4rem;">Loading...</div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://skopoptntpkomijboguh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrb3BvcHRudHBrb21pamJvZ3VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTU3MTIsImV4cCI6MjA5NjMzMTcxMn0.cQ35xNItDjdbtH_Ssi7h1RexeJXIP3itASJlYm8caxQ';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let currentUser = null, currentProfile = null, activeTab = 'dashboard', chartInstance = null;
+    
+    function showAuth(show) { document.getElementById('authSection').style.display = show ? 'flex' : 'none'; document.getElementById('dashboardApp').classList.toggle('hidden', show); }
+    
+    async function loadProfile() {
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+        if (error && error.code !== 'PGRST116') console.error(error);
+        if (data) { currentProfile = data; document.getElementById('planBadge').innerText = currentProfile.plan?.toUpperCase() || 'FREE'; }
+        else {
+            const { error: insertErr } = await supabase.from('profiles').insert([{ id: currentUser.id, full_name: currentUser.email?.split('@')[0], email: currentUser.email, plan: 'free' }]);
+            if (!insertErr) { const { data: np } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single(); currentProfile = np; }
+        }
+        document.getElementById('userNameDisplay').innerText = currentProfile?.full_name?.split(' ')[0] || 'Student';
+        renderCurrentView();
+    }
+    
+    async function renderCurrentView() {
+        const container = document.getElementById('mainPanel');
+        if (activeTab === 'dashboard') await renderDashboard(container);
+        else if (activeTab === 'universities') await renderUniversities(container);
+        else if (activeTab === 'scholarships') await renderScholarships(container);
+        else if (activeTab === 'tracker') await renderTracker(container);
+        else if (activeTab === 'documents') await renderDocuments(container);
+        else if (activeTab === 'ai') await renderAITools(container);
+        else if (activeTab === 'profile') await renderProfile(container);
+    }
+    
+    async function renderDashboard(container) {
+        const { data: apps } = await supabase.from('applications').select('*').eq('user_id', currentUser.id);
+        const { data: savedScholars } = await supabase.from('saved_scholarships').select('*').eq('user_id', currentUser.id);
+        const { data: savedUnis } = await supabase.from('saved_universities').select('*').eq('user_id', currentUser.id);
+        const upcoming = apps?.filter(a => a.deadline && new Date(a.deadline) > new Date()).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)) || [];
+        const { data: recommendedUnis } = await supabase.from('universities').select('*').limit(4);
+        const { data: recommendedScholars } = await supabase.from('scholarships').select('*').limit(3);
+        const accepted = apps?.filter(a=>a.status==='accepted').length || 0;
+        const submitted = apps?.filter(a=>a.status==='submitted').length || 0;
+        
+        container.innerHTML = `
+            <h2>Welcome back, ${currentProfile?.full_name?.split(' ')[0] || 'Student'} 👋</h2>
+            <p style="margin-bottom:1.5rem;">Your journey to global education starts here.</p>
+            <div class="grid-3" style="grid-template-columns: repeat(5,1fr);">
+                <div class="card stat-card"><i class="fas fa-file-alt"></i><h3>${apps?.length || 0}</h3><p>Applications</p></div>
+                <div class="card stat-card"><i class="fas fa-star"></i><h3>${savedScholars?.length || 0}</h3><p>Saved Scholarships</p></div>
+                <div class="card stat-card"><i class="fas fa-heart"></i><h3>${savedUnis?.length || 0}</h3><p>Saved Unis</p></div>
+                <div class="card stat-card"><i class="fas fa-check-circle"></i><h3>${accepted}</h3><p>Accepted</p></div>
+                <div class="card stat-card"><i class="fas fa-clock"></i><h3>${submitted}</h3><p>Submitted</p></div>
+            </div>
+            <div class="card" style="margin-bottom:1.5rem;"><h3>📅 Upcoming Deadlines (${upcoming.length})</h3>${upcoming.slice(0,4).map(a=>`<div class="deadline-item"><span><strong>${a.program}</strong><br><small>${a.deadline ? new Date(a.deadline).toDateString() : 'No date'}</small></span><span class="badge ${new Date(a.deadline) - new Date() < 14*86400000 ? 'badge-pending' : ''}">${Math.ceil((new Date(a.deadline) - new Date())/86400000)} days left</span></div>`).join('') || '<p>No upcoming deadlines. Add applications!</p>'}</div>
+            <div><h3>🎓 Recommended Universities</h3><div class="grid-3">${(recommendedUnis || []).map(u=>`<div class="card"><strong>${u.name}</strong><br>📍 ${u.country}<br>💰 ${u.tuition_display || '$'+u.tuition_usd}<br><button class="btn btn-outline saveUniBtn" data-id="${u.id}">Save</button> <button class="btn btn-primary trackUniBtn" data-name="${u.name}" data-id="${u.id}">Apply</button></div>`).join('')}</div></div>
+            <div><h3>💰 Featured Scholarships</h3><div class="grid-3">${(recommendedScholars || []).map(s=>`<div class="card"><strong>${s.title}</strong><br>🏛 ${s.provider}<br>💰 ${s.amount_display || '$'+s.amount_usd}<br>🗓 ${new Date(s.deadline).toDateString()}<br><button class="btn btn-outline saveScholarBtn" data-id="${s.id}">Save</button></div>`).join('')}</div></div>
+        `;
+        document.querySelectorAll('.saveUniBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_universities').insert([{ user_id: currentUser.id, university_id: parseInt(btn.dataset.id) }]); alert('Saved!'); }));
+        document.querySelectorAll('.trackUniBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('applications').insert([{ user_id: currentUser.id, university_name: btn.dataset.name, program: btn.dataset.name, status: 'researching' }]); alert('Added to tracker'); renderCurrentView(); }));
+        document.querySelectorAll('.saveScholarBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_scholarships').insert([{ user_id: currentUser.id, scholarship_id: parseInt(btn.dataset.id) }]); alert('Saved scholarship!'); }));
+    }
+    
+    async function renderUniversities(container) {
+        let { data: unis } = await supabase.from('universities').select('*').limit(50);
+        container.innerHTML = `<div><div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;"><input type="text" id="uniSearch" placeholder="🔍 Search university..." class="input-field" style="flex:1"><select id="countryFilter" class="input-field" style="width:auto"><option value="">All Countries</option>${[...new Set(unis?.map(u=>u.country))].map(c=>`<option>${c}</option>`).join('')}</select></div><div id="uniList" class="grid-3"></div></div>`;
+        function display(list) { document.getElementById('uniList').innerHTML = list.map(u=>`<div class="card"><h3>${u.name} ${u.flag_emoji || ''}</h3><p>📍 ${u.country} | Rank: ${u.ranking || 'N/A'}</p><p>💰 ${u.tuition_display || '$'+u.tuition_usd}/year</p><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, (u.ranking?5000/u.ranking:50))}%"></div></div><p>📅 Deadline: ${u.deadline ? new Date(u.deadline).toDateString() : 'Rolling'}</p><p><small>${u.requirements?.substring(0,80)}...</small></p><button class="btn btn-primary saveUniBtn2" data-id="${u.id}">Save University</button></div>`).join(''); attachSaveButtons(); }
+        function attachSaveButtons() { document.querySelectorAll('.saveUniBtn2').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_universities').insert([{ user_id: currentUser.id, university_id: parseInt(btn.dataset.id) }]); alert('Saved to your list!'); })); }
+        display(unis);
+        document.getElementById('uniSearch').addEventListener('input', e=> display(unis.filter(u=>u.name.toLowerCase().includes(e.target.value.toLowerCase()))));
+        document.getElementById('countryFilter').addEventListener('change', e=> display(unis.filter(u=>!e.target.value || u.country === e.target.value)));
+    }
+    
+    async function renderScholarships(container) {
+        let { data: schols } = await supabase.from('scholarships').select('*').limit(50);
+        container.innerHTML = `<div><input type="text" id="scholarSearch" placeholder="🔍 Search scholarship..." class="input-field" style="margin-bottom:1rem"><div id="scholarList" class="grid-3"></div></div>`;
+        function display(list) { document.getElementById('scholarList').innerHTML = list.map(s=>`<div class="card"><h3>${s.title}</h3><p>🏛 ${s.provider}</p><p>💰 ${s.amount_display || (s.amount_usd ? '$'+s.amount_usd : 'Full Scholarship')}</p><p>🗓 Deadline: ${new Date(s.deadline).toDateString()}</p><p>🎓 ${s.degree_levels?.join(', ') || 'All levels'}</p><button class="btn btn-primary saveScholarBtn2" data-id="${s.id}">Save</button> <button class="btn btn-outline applyScholar" data-title="${s.title}" data-id="${s.id}">Track Application</button></div>`).join('');
+            document.querySelectorAll('.saveScholarBtn2').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('saved_scholarships').insert([{ user_id: currentUser.id, scholarship_id: parseInt(btn.dataset.id) }]); alert('Saved!'); }));
+            document.querySelectorAll('.applyScholar').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('applications').insert([{ user_id: currentUser.id, program: btn.dataset.title, university_name: btn.dataset.title, status: 'researching' }]); alert('Added to tracker!'); renderCurrentView(); }));
+        }
+        display(schols);
+        document.getElementById('scholarSearch').addEventListener('input', e=> display(schols.filter(s=>s.title.toLowerCase().includes(e.target.value.toLowerCase()))));
+    }
+    
+    async function renderTracker(container) {
+        let { data: apps } = await supabase.from('applications').select('*').eq('user_id', currentUser.id);
+        container.innerHTML = `<h2>📋 My Applications</h2><button id="newAppBtn" class="btn btn-primary" style="margin-bottom:1rem"><i class="fas fa-plus"></i> New Application</button><div id="appsList"></div>`;
+        function renderApps() { const div = document.getElementById('appsList'); if(!div) return; div.innerHTML = (apps||[]).map(app=>`<div class="card" style="margin-bottom:1rem"><div style="display:flex; justify-content:space-between; align-items:start"><div><h3>${app.program}</h3><p>${app.university_name || 'University not specified'}</p></div><select class="statusUpdate" data-id="${app.id}" style="padding:0.3rem; border-radius:0.5rem;">${['researching','draft','in_progress','submitted','interview','waitlisted','accepted','rejected'].map(s=>`<option ${app.status===s ? 'selected':''}>${s}</option>`).join('')}</select></div><div>📅 Deadline: ${app.deadline ? new Date(app.deadline).toDateString() : 'Not set'} <button class="btn btn-outline setDeadlineBtn" data-id="${app.id}">Set</button></div><div>📝 Notes: ${app.notes || '—'}</div><div class="progress-bar mt-2"><div class="progress-fill" style="width:${app.status==='submitted'?40:app.status==='accepted'?100:app.status==='researching'?10:20}%"></div></div></div>`).join('');
+            document.querySelectorAll('.statusUpdate').forEach(s=>s.addEventListener('change', async e=>{ await supabase.from('applications').update({ status: s.value }).eq('id', s.dataset.id); renderTracker(container); }));
+            document.querySelectorAll('.setDeadlineBtn').forEach(btn=>btn.addEventListener('click', async ()=>{ let nd = prompt('Deadline (YYYY-MM-DD)'); if(nd) await supabase.from('applications').update({ deadline: nd }).eq('id', btn.dataset.id); renderTracker(container); }));
+        }
+        renderApps();
+        document.getElementById('newAppBtn')?.addEventListener('click', async ()=>{ let prog = prompt('Program/University name'); if(prog) await supabase.from('applications').insert([{ user_id: currentUser.id, program: prog, university_name: prog, status: 'researching' }]); renderTracker(container); });
+    }
+    
+    async function renderDocuments(container) {
+        let { data: docs } = await supabase.from('documents').select('*').eq('user_id', currentUser.id);
+        container.innerHTML = `<h2>📄 Document Vault</h2><div class="card"><input type="file" id="docFile" accept=".pdf,.docx,.jpg,.png" class="input-field"><select id="docType" class="input-field"><option value="cv">CV/Resume</option><option value="transcript">Transcript</option><option value="certificate">Certificate</option><option value="recommendation">Recommendation Letter</option><option value="passport">Passport</option></select><button id="uploadDocBtn" class="btn btn-primary">Upload Document</button></div><div id="docsList" class="grid-3" style="margin-top:1.5rem"></div>`;
+        const listDiv = document.getElementById('docsList');
+        if(listDiv) listDiv.innerHTML = (docs||[]).map(d=>`<div class="card"><i class="fas fa-file-pdf"></i> <strong>${d.doc_name || d.file_name}</strong><br><small>${d.doc_type}</small><br><a href="${d.file_url}" target="_blank" class="btn btn-outline" style="margin-top:0.5rem">View</a> <button class="btn btn-outline deleteDocBtn" data-id="${d.id}">Delete</button></div>`).join('');
+        document.querySelectorAll('.deleteDocBtn').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('documents').delete().eq('id', btn.dataset.id); renderDocuments(container); }));
+        document.getElementById('uploadDocBtn')?.addEventListener('click', async () => {
+            const file = document.getElementById('docFile').files[0]; const docType = document.getElementById('docType').value;
+            if(!file) return alert('Select a file');
+            const filePath = `${currentUser.id}/${Date.now()}_${file.name}`;
+            const { error: upErr } = await supabase.storage.from('documents').upload(filePath, file);
+            if(upErr) { alert('Upload failed: ' + upErr.message); return; }
+            const { data: pubUrl } = supabase.storage.from('documents').getPublicUrl(filePath);
+            await supabase.from('documents').insert([{ user_id: currentUser.id, doc_type: docType, doc_name: file.name, file_name: file.name, file_url: pubUrl.publicUrl, file_size: file.size }]);
+            renderDocuments(container);
+        });
+    }
+    
+    async function renderAITools(container) {
+        container.innerHTML = `<h2>🤖 AI Admission Assistant</h2><div class="grid-3"><div class="card"><h3>📝 AI CV Builder</h3><textarea id="cvInput" placeholder="Paste your education, skills, experience..." rows="6" class="input-field"></textarea><button id="genCV" class="btn btn-primary">Generate Professional CV</button><div id="cvResult" style="margin-top:1rem; background:#f1f5f9; padding:1rem; border-radius:0.75rem;"></div></div><div class="card"><h3>✍️ Personal Statement Generator</h3><input id="psCourse" placeholder="Course/Program" class="input-field"><input id="psUni" placeholder="Target University" class="input-field"><textarea id="psAchievements" placeholder="Your achievements & goals" rows="3" class="input-field"></textarea><button id="genPS" class="btn btn-primary">Generate Statement</button><div id="psResult" style="margin-top:1rem; background:#f1f5f9; padding:1rem; border-radius:0.75rem;"></div></div><div class="card"><h3>🎓 University Matcher</h3><input id="matchBudget" placeholder="Budget (USD/year)" class="input-field"><input id="matchCountry" placeholder="Preferred Country" class="input-field"><select id="matchDegree" class="input-field"><option>Bachelor</option><option>Master</option><option>PhD</option></select><button id="matchBtn" class="btn btn-primary">Find Matches</button><div id="matchResults" class="grid-3" style="margin-top:1rem;"></div></div></div>`;
+        document.getElementById('genCV')?.addEventListener('click', ()=>{ const txt = document.getElementById('cvInput').value; document.getElementById('cvResult').innerHTML = `<pre style="white-space:pre-wrap;"># ACADEMIC CV\n\n${txt || 'Education: Bachelor Candidate, Skills: Leadership, Research, Communication'}\n\n## Awards & Recognition\n- Academic Excellence Award\n- Community Leadership</pre><button onclick="navigator.clipboard.writeText(this.previousElementSibling.innerText)" class="btn btn-outline">Copy CV</button>`; });
+        document.getElementById('genPS')?.addEventListener('click', ()=>{ const course = document.getElementById('psCourse').value, uni = document.getElementById('psUni').value, ach = document.getElementById('psAchievements').value; document.getElementById('psResult').innerHTML = `<p>Dear Admissions Committee,<br><br>My passion for ${course || 'my chosen field'} drives me to pursue studies at ${uni || 'your esteemed university'}. ${ach || 'Throughout my academic journey, I have demonstrated leadership and commitment.'} As a student from Africa, I bring unique perspectives and resilience.<br><br>Sincerely,<br>Applicant</p><button onclick="navigator.clipboard.writeText(this.previousElementSibling.innerText)" class="btn btn-outline">Copy</button>`; });
+        document.getElementById('matchBtn')?.addEventListener('click', async ()=>{ const budget = parseInt(document.getElementById('matchBudget').value) || 15000; const country = document.getElementById('matchCountry').value; const { data: unis } = await supabase.from('universities').select('*'); const matches = unis.filter(u => (u.tuition_usd <= budget+5000) && (!country || u.country.toLowerCase().includes(country.toLowerCase()))).slice(0,6); document.getElementById('matchResults').innerHTML = matches.map(u=>`<div class="card"><strong>${u.name}</strong><br>💰 $${u.tuition_usd}/yr<br>📍 ${u.country}<br><button class="btn btn-primary trackMatch" data-name="${u.name}">Add to Tracker</button></div>`).join(''); document.querySelectorAll('.trackMatch').forEach(btn=>btn.addEventListener('click', async e=>{ await supabase.from('applications').insert([{ user_id: currentUser.id, program: btn.dataset.name, university_name: btn.dataset.name, status: 'researching' }]); alert('Added!'); })); });
+    }
+    
+    async function renderProfile(container) {
+        container.innerHTML = `<h2>👤 My Profile</h2><div class="card"><form id="profileForm"><input id="fullName" value="${currentProfile?.full_name || ''}" placeholder="Full Name" class="input-field"><select id="countrySelect" class="input-field"><option>Rwanda</option><option>Kenya</option><option>Uganda</option><option>Nigeria</option><option>Ghana</option></select><input id="intendedDegree" value="${currentProfile?.intended_degree || ''}" placeholder="Intended Degree (e.g., Computer Science)" class="input-field"><input id="prefCountries" value="${currentProfile?.preferred_countries || ''}" placeholder="Preferred study countries" class="input-field"><button type="submit" class="btn btn-primary">Update Profile</button></form><hr><h3>Subscription</h3><p>Current Plan: <strong>${currentProfile?.plan || 'Free'}</strong></p><p>${currentProfile?.plan === 'free' ? 'Upgrade to Premium for unlimited AI essays & advanced matching' : '✨ Premium Active - Enjoy unlimited AI tools!'}</p></div>`;
+        document.getElementById('profileForm')?.addEventListener('submit', async e=>{ e.preventDefault(); await supabase.from('profiles').update({ full_name: document.getElementById('fullName').value, country: document.getElementById('countrySelect').value, intended_degree: document.getElementById('intendedDegree').value, preferred_countries: document.getElementById('prefCountries').value }).eq('id', currentUser.id); alert('Profile updated!'); loadProfile(); });
+    }
+    
+    // Event handlers & auth
+    document.getElementById('doLogin')?.addEventListener('click', async () => { const email=document.getElementById('loginEmail').value, pwd=document.getElementById('loginPassword').value; const {data,error}=await supabase.auth.signInWithPassword({email,password:pwd}); if(error){document.getElementById('loginMessage').innerText=error.message;document.getElementById('loginMessage').classList.remove('hidden');}else{currentUser=data.user;showAuth(false);await loadProfile();}});
+    document.getElementById('doSignup')?.addEventListener('click', async () => { const email=document.getElementById('signupEmail').value, pwd=document.getElementById('signupPassword').value, name=document.getElementById('signupName').value; const {data,error}=await supabase.auth.signUp({email,password:pwd,options:{data:{full_name:name}}}); if(error){document.getElementById('signupMessage').innerText=error.message;document.getElementById('signupMessage').classList.remove('hidden');}else{alert('Account created! Please check email for confirmation (or login if auto-confirmed).');}});
+    document.getElementById('showLoginBtn')?.addEventListener('click',()=>{document.getElementById('loginForm').classList.remove('hidden');document.getElementById('signupForm').classList.add('hidden');});
+    document.getElementById('showSignupBtn')?.addEventListener('click',()=>{document.getElementById('signupForm').classList.remove('hidden');document.getElementById('loginForm').classList.add('hidden');});
+    document.getElementById('logoutBtn')?.addEventListener('click', async()=>{await supabase.auth.signOut();currentUser=null;showAuth(true);});
+    document.getElementById('upgradeBtn')?.addEventListener('click', ()=>{ alert('Premium upgrade coming soon! $4.99/month — unlimited AI essays & matching.'); });
+    document.querySelectorAll('[data-nav]').forEach(el=>{el.addEventListener('click',()=>{activeTab=el.getAttribute('data-nav');renderCurrentView();});});
+    document.getElementById('darkModeToggle')?.addEventListener('click',()=>document.body.classList.toggle('dark'));
+    async function checkSession(){ const {data:{session}}=await supabase.auth.getSession(); if(session){currentUser=session.user;showAuth(false);await loadProfile();}else{showAuth(true);} }
+    checkSession();
+</script>
+</body>
+</html>
